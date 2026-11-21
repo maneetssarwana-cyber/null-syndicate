@@ -1,0 +1,233 @@
+{
+  "timestamp": "2026-11-21T22:26:32.393419Z",
+  "suite": "IndiePulse Core Multi-Modal & Municipal Engine Test Suite",
+  "summary": {
+    "total_tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "pass_rate_pct": 100.0,
+    "average_latency_ms": 76.76
+  },
+  "test_results": [
+    {
+      "test_id": "TEST-01-REVERSE-GEOCODE",
+      "name": "Live GPS Reverse Geocoding (Google Maps / Nominatim Fallback)",
+      "passed": true,
+      "latency_ms": 19.83,
+      "details": "Resolved: 'GPS Pin (28.6145, 77.2095)' via provider 'local_coordinates'",
+      "data": {
+        "success": true,
+        "provider": "local_coordinates",
+        "address": "GPS Pin (28.6145, 77.2095)",
+        "landmark": "Detected Device GPS Location",
+        "district": "Detected District",
+        "state": "Detected State",
+        "latitude": 28.6145,
+        "longitude": 77.2095
+      }
+    },
+    {
+      "test_id": "TEST-02-RABIES-TRIAGE",
+      "name": "Confirmed Rabies Multimodal Triage (Vision + Acoustic Howl)",
+      "passed": true,
+      "latency_ms": 307.74,
+      "details": "Tier: TIER_1_RABIES_QUARANTINE | Confidence: 0.984 | Howl: HOARSE_RABIES_HOWL",
+      "data": {
+        "consensus": {
+          "consensus_reached": true,
+          "tier": "TIER_1_RABIES_QUARANTINE",
+          "average_confidence": 0.984,
+          "block_confidences": [
+            0.94,
+            0.91,
+            0.96
+          ],
+          "threshold_required": 0.85,
+          "reason": "Multimodal Consensus Confirmed: Visual motor ataxia (3-block consensus) + Laryngeal vocal cord paresis ('rabies howl') detected.",
+          "audio_correlation": "Audio Confirmed: Laryngeal paresis ('rabies howl') confirms vocal cord paralysis.",
+          "hallucination_shield_activated": false,
+          "dispatch_unit": "MUNICIPAL_ANIMAL_CATCHERS_QUARANTINE_SQUAD",
+          "required_equipment": [
+            "Bite-Resistant Kevlar Sleeves & Gloves",
+            "Humane Restraint Catch Pole",
+            "Isolation Quarantine Enclosure"
+          ],
+          "geofence_alert": {
+            "enabled": true,
+            "radius_meters": 500,
+            "message": "EMERGENCY ADVISORY: Suspected rabid animal detected within 500m. Keep pets indoors."
+          },
+          "sla_minutes": 45
+        },
+        "audio": {
+          "has_audio": true,
+          "classification": "HOARSE_RABIES_HOWL",
+          "label": "Laryngeal Paralysis (Rabies Howl)",
+          "icon": "alert-triangle",
+          "badge_color": "red",
+          "laryngeal_paralysis": true,
+          "pain_whining": false,
+          "confidence": 0.94,
+          "notes": "Acoustic Spectrum: Low-frequency harmonic disruption with prominent subharmonic rasping; pathognomonic for laryngeal vocal cord paresis."
+        },
+        "integrity": {
+          "status": "VERIFIED_AUTHENTIC",
+          "badge_color": "green",
+          "badge_label": "Verified Authentic Device Capture",
+          "integrity_score": 1.0,
+          "phash": "0000000000000000",
+          "is_recycled": false,
+          "recycled_source": null,
+          "freshness": {
+            "fresh": true,
+            "source_age_hours": 1.44,
+            "status": "FRESH_LIVE_CAPTURE"
+          },
+          "geo_verification": {
+            "consistent": true,
+            "status": "VERIFIED_WITHIN_BOUNDS",
+            "notes": "Coordinates (28.6142, 77.2092) verified inside Delhi geographic perimeter."
+          },
+          "flags": [],
+          "notes": "Verified authentic live mobile video capture."
+        }
+      }
+    },
+    {
+      "test_id": "TEST-03-PANTING-SHIELD",
+      "name": "Summer Panting Cross-Modal Overrule (Anti-Hallucination Shield)",
+      "passed": true,
+      "latency_ms": 220.36,
+      "details": "Shield Activated: True | Overruled to: TIER_2_STRAY_MEDICAL_AID",
+      "data": {
+        "consensus": {
+          "consensus_reached": false,
+          "tier": "TIER_2_STRAY_MEDICAL_AID",
+          "average_confidence": 0.177,
+          "block_confidences": [
+            0.25,
+            0.18,
+            0.1
+          ],
+          "threshold_required": 0.85,
+          "reason": "\ud83d\udee1\ufe0f Anti-Hallucination Shield Activated: Acoustic aerodynamic airflow (<300 Hz) confirmed normal respiratory panting. Reclassified as Summer Heatstroke/Thirst to prevent false rabies culling.",
+          "condition_diagnosed": "Heatstroke / Summer Dehydration (Anti-Hallucination Safe Pass)",
+          "audio_correlation": "Acoustics: Aerodynamic airflow without vocal cord distress.",
+          "dispatch_unit": "GOVERNMENT_MOBILE_VET_DISPENSARY",
+          "hallucination_shield_activated": true,
+          "required_equipment": [
+            "Electrolytes & Fluid Therapy",
+            "Cooling Ice-Gel Packs",
+            "Oral Rehydration Solution"
+          ],
+          "geofence_alert": {
+            "enabled": false,
+            "radius_meters": 0,
+            "message": null
+          },
+          "sla_minutes": 720
+        },
+        "audio": {
+          "has_audio": true,
+          "classification": "NORMAL_SUMMER_PANTING",
+          "label": "Aerodynamic Summer Panting",
+          "icon": "wind",
+          "badge_color": "green",
+          "laryngeal_paralysis": false,
+          "pain_whining": false,
+          "confidence": 0.08,
+          "notes": "Acoustic Spectrum: Pure aerodynamic low-energy flow below 280 Hz; no phonatory vocal cord engagement (thermoregulatory cooling)."
+        }
+      }
+    },
+    {
+      "test_id": "TEST-04-FRACTURE-PAIN",
+      "name": "Orthopedic Trauma & Pain Whine Detection",
+      "passed": true,
+      "latency_ms": 219.58,
+      "details": "Classification: ACUTE_PAIN_WHINE | Unit: GOVERNMENT_MOBILE_VET_DISPENSARY",
+      "data": {
+        "consensus": {
+          "consensus_reached": false,
+          "tier": "TIER_2_STRAY_MEDICAL_AID",
+          "average_confidence": 0.083,
+          "block_confidences": [
+            0.12,
+            0.08,
+            0.05
+          ],
+          "threshold_required": 0.85,
+          "reason": "Rabies ruled out (did not meet sustained 85% consensus). Classified as Severe Trauma: Fracture & Open Wound.",
+          "condition_diagnosed": "Severe Trauma: Fracture & Open Wound",
+          "audio_correlation": "Acoustics: Pain vocalization detected accompanying multiple physical traumas.",
+          "hallucination_shield_activated": false,
+          "dispatch_unit": "GOVERNMENT_MOBILE_VET_DISPENSARY",
+          "required_equipment": [
+            "Antiseptic Dressing Kit",
+            "Pain Management Injectables",
+            "Electrolytes & Fluid Therapy"
+          ],
+          "geofence_alert": {
+            "enabled": false,
+            "radius_meters": 0,
+            "message": null
+          },
+          "sla_minutes": 720
+        },
+        "audio": {
+          "has_audio": true,
+          "classification": "ACUTE_PAIN_WHINE",
+          "label": "Acute Pain Vocalization (Yelp / Whine)",
+          "icon": "volume-2",
+          "badge_color": "amber",
+          "laryngeal_paralysis": false,
+          "pain_whining": true,
+          "confidence": 0.12,
+          "notes": "Acoustic Spectrum: Peak frequency spikes between 1.8 kHz and 3.2 kHz corresponding to acute somatic pain whimpering."
+        }
+      }
+    },
+    {
+      "test_id": "TEST-05-AUDIO-REJECTION",
+      "name": "Media Extension Guard (Reject .mp3 without video)",
+      "passed": true,
+      "latency_ms": 0.0,
+      "details": "Rejected extension '.mp3' -> HTTP 400 enforcement verified."
+    },
+    {
+      "test_id": "TEST-06-DHASH-COLLISION",
+      "name": "Perceptual Hashing (dHash) & Anti-Viral Duplicate Detection",
+      "passed": true,
+      "latency_ms": 0.0,
+      "details": "Exact Hamming Distance: 0 | Near-duplicate distance: 1 (Threshold <= 8)"
+    },
+    {
+      "test_id": "TEST-07-BOUNDARY-CHECK",
+      "name": "Polygon Geographic Boundary Verification (Ward Spoofing Detection)",
+      "passed": true,
+      "latency_ms": 0.01,
+      "details": "In-bounds: VERIFIED_WITHIN_BOUNDS | Out-of-bounds: GEOGRAPHIC_MISMATCH_SPOOF"
+    },
+    {
+      "test_id": "TEST-08-DISPATCH-TELEMETRY",
+      "name": "Field Unit Dispatch & Live Telemetry Synchronization",
+      "passed": true,
+      "latency_ms": 0.04,
+      "details": "Status: SUCCESS | Squad: Quarantine Net Squad #1 | ETA: 8m"
+    },
+    {
+      "test_id": "TEST-09-SLA-ESCALATION",
+      "name": "Municipal SLA Breach Simulation & Auto-Escalation to District Magistrate",
+      "passed": true,
+      "latency_ms": 0.02,
+      "details": "Status: ESCALATED_TO_DISTRICT_MAGISTRATE | Escalated: True"
+    },
+    {
+      "test_id": "TEST-10-GEMINI-STATUS",
+      "name": "Google Gemini Engine Configuration & Key Masking Security",
+      "passed": true,
+      "latency_ms": 0.01,
+      "details": "Status: CONFIGURED | Masked Key: AQ.Ab8\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022ae7Q"
+    }
+  ]
+}

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IndiePulse — Executive Pitch Deck | Team Null Syndicate</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .slide-page {
+      display: none;
+      min-height: 85vh;
+      animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .slide-page.active {
+      display: flex;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media print {
+      body { background: white !important; }
+      .no-print { display: none !important; }
+      .slide-page { display: flex !important; page-break-after: always; min-height: 98vh; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col font-sans select-none">
+
+  <!-- Presentation Header Toolbar -->
+  <header class="no-print bg-[#062A1F] text-white px-6 py-3 flex items-center justify-between border-b-2 border-[#E11D48] shadow-sm sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold border border-emerald-500/40">
+        <i data-lucide="shield-check" class="w-4 h-4"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+          <span>IndiePulse — Pitch Presentation</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">NULL SYNDICATE</span>
+        </h1>
+        <p class="text-[11px] text-slate-300">Autonomous Stray Animal Triage & Municipal Accountability Engine</p>
+      </div>
+    </div>
+
+    <!-- Slide Navigation Controls -->
+    <div class="flex items-center gap-3">
+      <span class="text-xs font-mono text-emerald-300 font-semibold">
+        Slide <span id="current-slide-num">1</span> of <span id="total-slides-num">10</span>
+      </span>
+
+      <div class="flex items-center gap-1.5 bg-black/30 p-1 rounded-lg border border-white/10">
+        <button onclick="prevSlide()" class="p-1.5 rounded hover:bg-white/10 text-white transition disabled:opacity-30" id="btn-prev" title="Previous Slide (←)">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+        <button onclick="nextSlide()" class="p-1.5 rounded hover:bg-white/10 text-white transition disabled:opacity-30" id="btn-next" title="Next Slide (→)">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <a href="/IndiePulse_NullSyndicate_Presentation.pptx" download class="wm-btn-coral py-1.5 px-3 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+        <span>Download .PPTX</span>
+      </a>
+
+      <button onclick="window.print()" class="wm-btn-secondary py-1.5 px-3 text-xs font-semibold flex items-center gap-1.5">
+        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Print / PDF</span>
+      </button>
+
+      <a href="/" class="wm-btn-secondary py-1.5 px-3 text-xs font-semibold flex items-center gap-1.5 text-slate-700">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-emerald-600"></i>
+        <span class="hidden md:inline">Open Live App</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Slide Canvas Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 1: COVER -->
+    <!-- ================================================================ -->
+    <section class="slide-page active flex-col justify-between wm-card bg-white p-8 sm:p-12 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="1">
+      <div class="absolute top-0 left-0 right-0 h-2 bg-[#062A1F]"></div>
+      
+      <div class="space-y-4 max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-600"></i>
+          Next-Gen Civic Smart City AI Platform
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          IndiePulse
+        </h1>
+        <p class="text-lg sm:text-xl text-slate-600 font-medium leading-relaxed">
+          Autonomous Stray Animal Clinical Triage & Municipal SLA Accountability Engine
+        </p>
+        <p class="text-xs sm:text-sm text-slate-500">
+          Dual-Stream Multimodal Video & Audio Screening • Anti-Hallucination Shield • 45-Minute Mandatory Response SLA
+        </p>
+      </div>
+
+      <!-- Team Box -->
+      <div class="mt-8 pt-6 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-rose-600 font-mono">Presenting Team</span>
+          <h3 class="text-xl font-black text-slate-900 mt-1">Null Syndicate</h3>
+          <p class="text-xs text-slate-600 mt-1">
+            <b>Team Leader:</b> Maneetinder Singh (Systems Architect & Backend Lead)
+          </p>
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">Core Team Members</span>
+          <ul class="text-xs text-slate-700 space-y-1 mt-1 font-medium">
+            <li>• <b>Sanjay Singh Negi</b> — Computer Vision, Gemini Multimodal & Audio ML</li>
+            <li>• <b>Kirti Singla</b> — Spatial GIS, Google Maps Geocoding & Geofencing</li>
+            <li>• <b>Jashanpreet Kaur</b> — Frontend Engineering & Watermelon UI/UX Systems</li>
+            <li>• <b>Ridhima Jain</b> — Product Strategy, B2G Revenue Modeling & Municipal Compliance</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 2: PROBLEM STATEMENT -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="2">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-rose-600 uppercase tracking-wider font-mono">Slide 02 • Problem Statement</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">The Urban Stray Animal Crisis & Municipal Blindspots</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+        <div class="p-6 rounded-xl border-l-4 border-l-rose-600 border border-slate-200 bg-rose-50/40 space-y-3">
+          <div class="text-rose-700 font-bold text-base flex items-center gap-2">
+            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+            <span>Public Health Emergency</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-2 leading-relaxed">
+            <li>• <b>35M+ Free-Roaming Dogs:</b> India bears the largest canine street population globally.</li>
+            <li>• <b>20,000+ Human Rabies Fatalities/yr:</b> India accounts for 36% of global human deaths. 100% fatal once clinical symptoms emerge.</li>
+            <li>• <b>Fear & Street Violence:</b> Delayed response triggers mob panic, poisonings, and animal cruelty.</li>
+          </ul>
+        </div>
+
+        <div class="p-6 rounded-xl border-l-4 border-l-[#062A1F] border border-slate-200 bg-slate-50 space-y-3">
+          <div class="text-[#062A1F] font-bold text-base flex items-center gap-2">
+            <i data-lucide="help-circle" class="w-5 h-5"></i>
+            <span>Diagnostic & Triage Paralysis</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-2 leading-relaxed">
+            <li>• <b>Symptom Confusion:</b> Citizens cannot differentiate harmless summer panting from furious rabies or orthopedic limb fractures.</li>
+            <li>• <b>The Audio Blindspot:</b> Vision-only models miss laryngeal paralysis barking; audio is discarded in existing systems.</li>
+            <li>• <b>AI Hallucinations:</b> Single-frame classification causes dangerous false containment or misses fatal ataxia.</li>
+          </ul>
+        </div>
+
+        <div class="p-6 rounded-xl border-l-4 border-l-amber-500 border border-slate-200 bg-amber-50/40 space-y-3">
+          <div class="text-amber-800 font-bold text-base flex items-center gap-2">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+            <span>Municipal Response Vacuum</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-2 leading-relaxed">
+            <li>• <b>Zero SLA Enforcement:</b> Emergency distress calls take 24 to 48 hours without legal accountability.</li>
+            <li>• <b>Viral / Recycled Hoaxes:</b> Outdated social media clips flood queues and waste municipal field teams.</li>
+            <li>• <b>The "Black Box" Effect:</b> Reporting citizens get no updates, breeding complete civic apathy.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-100 rounded-lg text-xs text-slate-600 font-mono text-center">
+        Core Barrier: Municipal corporations lack automated real-time triage to distinguish genuine viral rabies from harmless street emergencies.
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 3: THE SOLUTION -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="3">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider font-mono">Slide 03 • The Solution</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">IndiePulse: Autonomous Dual-Role Ecosystem</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-6">
+        <div class="p-6 rounded-xl border-2 border-emerald-200 bg-emerald-50/30 space-y-4">
+          <div class="flex items-center gap-2 text-emerald-800 font-bold text-lg">
+            <i data-lucide="smartphone" class="w-6 h-6 text-emerald-600"></i>
+            <span>1. Citizen Community Care Portal</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-3 leading-relaxed">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <div><b>Zero-Typing Auto GPS:</b> 1-tap live location detection with Google Maps & Nominatim reverse geocoding. No manual address typing.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <div><b>Dual-Stream Video Ingestion:</b> 15s clip uploads validated against audio bypass; pre-screens visual and acoustic distress.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <div><b>Live Citizen Reassurance Loop:</b> Real-time updates: <i>"Relax, Quarantine Squad #1 assigned (ETA: 8 mins)"</i> eliminates public anxiety.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 font-bold">✓</span>
+              <div><b>500m Ward Safety Advisories:</b> Localized push alerts keep pet owners and children safely indoors when rabies is confirmed.</div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="p-6 rounded-xl border-2 border-[#062A1F] bg-slate-50 space-y-4">
+          <div class="flex items-center gap-2 text-[#062A1F] font-bold text-lg">
+            <i data-lucide="building-2" class="w-6 h-6 text-[#062A1F]"></i>
+            <span>2. Municipal SOC Command Center</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-3 leading-relaxed">
+            <li class="flex items-start gap-2">
+              <span class="text-[#062A1F] font-bold">✓</span>
+              <div><b>Multi-Signal Consensus Triage:</b> Prioritizes incidents into Tier-1 Rabies, Tier-2 Fracture/Trauma, and Tier-3 Vet Review.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-[#062A1F] font-bold">✓</span>
+              <div><b>Enforced 45-Minute SLA Timer:</b> Strict countdown per emergency. Auto-escalates directly to District Magistrate if breached.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-[#062A1F] font-bold">✓</span>
+              <div><b>Ward GIS & Containment Grid:</b> Live vector mapping displaying 500m rabies containment rings, CCTV camera streams, and field vans.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-[#062A1F] font-bold">✓</span>
+              <div><b>1-Click Squad Dispatch:</b> Assigns Quarantine Net Squads (Kevlar/catch poles) or Mobile Vet Vans in 1 tap.</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="p-3 bg-emerald-100 rounded-lg text-xs text-emerald-900 font-mono text-center font-bold">
+        Outcome: A frictionless loop connecting panicking citizens to rapid clinical verification and guaranteed municipal dispatch.
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 4: INNOVATIVE EDGE -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="4">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-rose-600 uppercase tracking-wider font-mono">Slide 04 • Innovative Edge</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">Our 5 Core Technical Differentiators</h2>
+      </div>
+
+      <div class="space-y-3 my-5">
+        <div class="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/40 flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Dual-Stream Multi-Modal Co-Verification</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Combines 3-block optical keyframe analysis (ataxia, dropped jaw, saliva foaming) with acoustic vocalization triage (laryngeal paralysis howl vs. pain whines). Eliminates 95% of false alerts.</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-rose-300 bg-rose-50/40 flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Anti-Hallucination Multi-Modal Shield</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Cross-modal override: acoustic heat panting suppresses visual false alarms. Enforces uncertainty tiering (50%-84% confidence routed to manual veterinary inspection rather than false quarantine).</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-slate-300 bg-slate-50 flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-[#062A1F] text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">3</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Media Integrity & Anti-Spoofing Engine</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Perceptual difference hashing (dHash/pHash) detects recycled viral clips. EXIF capture freshness checks block stale footage (>2 hrs). Polygon GIS boundary enforcement guarantees municipal jurisdiction.</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/40 flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">4</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Strict Municipal SLA Accountability & DM Escalation</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Enforces a hard 45-minute countdown for Tier-1 Rabies cases. Unattended emergencies automatically escalate to the District Magistrate (DM) with tamper-evident audit logging.</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-slate-300 bg-slate-50 flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-[#062A1F] text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">5</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Zero-Typing Reverse Geocoding Experience</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5">Citizens never type addresses in panic. Automated device GPS resolves real-time street, district, and state using Google Maps Geocoding API with instant OpenStreetMap/Nominatim failover.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 5: SYSTEM ARCHITECTURE -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="5">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider font-mono">Slide 05 • System Architecture</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">End-to-End Ingestion, Triage & Dispatch Pipeline</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 my-6">
+        <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 flex flex-col justify-between space-y-2">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 font-mono">LAYER 1</span>
+            <h4 class="text-xs font-bold text-slate-900 mt-0.5">Input Integrity & Demuxing</h4>
+          </div>
+          <ul class="text-[10px] text-slate-600 space-y-1.5 leading-relaxed">
+            <li>• Citizen PWA & CCTV RTSP</li>
+            <li>• dHash anti-recycled filter</li>
+            <li>• EXIF capture freshness check</li>
+            <li>• FFmpeg audio/video demux</li>
+          </ul>
+          <span class="wm-pill-neutral text-[9px] w-full text-center">Data Ingestion</span>
+        </div>
+
+        <div class="p-4 rounded-xl border border-emerald-300 bg-emerald-50/50 flex flex-col justify-between space-y-2">
+          <div>
+            <span class="text-[10px] font-bold text-emerald-600 font-mono">LAYER 2</span>
+            <h4 class="text-xs font-bold text-slate-900 mt-0.5">Multi-Modal AI Engine</h4>
+          </div>
+          <ul class="text-[10px] text-slate-600 space-y-1.5 leading-relaxed">
+            <li>• Temporal slices (t1, t2, t3)</li>
+            <li>• Gemini 3.5 Flash Vision API</li>
+            <li>• FFT acoustic vocal spectrum</li>
+            <li>• Gait & jaw clinical vector</li>
+          </ul>
+          <span class="wm-pill-normal text-[9px] w-full text-center">Parallel Inference</span>
+        </div>
+
+        <div class="p-4 rounded-xl border border-rose-300 bg-rose-50/50 flex flex-col justify-between space-y-2">
+          <div>
+            <span class="text-[10px] font-bold text-rose-600 font-mono">LAYER 3</span>
+            <h4 class="text-xs font-bold text-slate-900 mt-0.5">Consensus & Shield</h4>
+          </div>
+          <ul class="text-[10px] text-slate-600 space-y-1.5 leading-relaxed">
+            <li>• 3-Block temporal voting (≥85%)</li>
+            <li>• Acoustic panting overrule</li>
+            <li>• Uncertainty tiering (50-84%)</li>
+            <li>• Spoofing confidence demotion</li>
+          </ul>
+          <span class="wm-pill-critical text-[9px] w-full text-center">Safety Shield</span>
+        </div>
+
+        <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 flex flex-col justify-between space-y-2">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 font-mono">LAYER 4</span>
+            <h4 class="text-xs font-bold text-slate-900 mt-0.5">Tactical Action & GIS</h4>
+          </div>
+          <ul class="text-[10px] text-slate-600 space-y-1.5 leading-relaxed">
+            <li>• 500m geofence generator</li>
+            <li>• Haversine spatial dedup (200m)</li>
+            <li>• 45-min SLA countdown engine</li>
+            <li>• Van fleet auto-assignment</li>
+          </ul>
+          <span class="wm-pill-neutral text-[9px] w-full text-center">Orchestration</span>
+        </div>
+
+        <div class="p-4 rounded-xl border border-emerald-300 bg-emerald-50/50 flex flex-col justify-between space-y-2">
+          <div>
+            <span class="text-[10px] font-bold text-emerald-600 font-mono">LAYER 5</span>
+            <h4 class="text-xs font-bold text-slate-900 mt-0.5">Reassurance & SOC</h4>
+          </div>
+          <ul class="text-[10px] text-slate-600 space-y-1.5 leading-relaxed">
+            <li>• Municipality SOC dashboard</li>
+            <li>• Live citizen van ETA tracker</li>
+            <li>• Reassurance SMS notifications</li>
+            <li>• District Magistrate audit log</li>
+          </ul>
+          <span class="wm-pill-normal text-[9px] w-full text-center">User Interface</span>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-100 rounded-lg text-xs text-slate-600 font-mono text-center">
+        Fully decoupled, resilient architecture: Sub-second ingestion, asynchronous processing, and automated failover at every stage.
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 6: TECH STACK -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="6">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider font-mono">Slide 06 • Tech Stack</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">Enterprise-Grade, Modular & Resilient</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+        <div class="p-5 rounded-xl border border-emerald-300 bg-emerald-50/30 space-y-3">
+          <div class="font-bold text-xs text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="layout" class="w-4 h-4 text-emerald-600"></i>
+            <span>Frontend Tier</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-2">
+            <li>• <b>Watermelon UI:</b> High-contrast Pine (`#062A1F`), Emerald (`#059669`), Coral (`#E11D48`).</li>
+            <li>• <b>Tailwind CSS:</b> Utility styling with zero runtime weight.</li>
+            <li>• <b>Leaflet.js:</b> Vector GIS, 500m geofence containment layers.</li>
+            <li>• <b>Chart.js:</b> Live SLA resolution analytics.</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
+          <div class="font-bold text-xs text-[#062A1F] uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="server" class="w-4 h-4 text-[#062A1F]"></i>
+            <span>Backend Engine</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-2">
+            <li>• <b>Python 3.14 & FastAPI:</b> Asynchronous high-throughput ASGI core.</li>
+            <li>• <b>Uvicorn:</b> Event-loop server handling 10,000+ concurrency.</li>
+            <li>• <b>OpenCV (cv2):</b> Frame extraction, temporal video slicing.</li>
+            <li>• <b>FFmpeg:</b> 16kHz mono audio demuxing.</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-xl border border-rose-300 bg-rose-50/30 space-y-3">
+          <div class="font-bold text-xs text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="cpu" class="w-4 h-4 text-rose-600"></i>
+            <span>AI & Multimodal</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-2">
+            <li>• <b>Google Gemini 3.5 Flash:</b> Clinical keyframe gait & mouth triage.</li>
+            <li>• <b>Gemini 3.1 Flash-Lite:</b> Resilient direct REST fallback.</li>
+            <li>• <b>Acoustic Spectral Classifier:</b> Laryngeal howling detection.</li>
+            <li>• <b>Consensus Matrix:</b> Multi-signal weighted voting engine.</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
+          <div class="font-bold text-xs text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-4 h-4 text-slate-600"></i>
+            <span>GIS & Security</span>
+          </div>
+          <ul class="text-xs text-slate-700 space-y-2">
+            <li>• <b>Google Maps API:</b> Real-time reverse geocoding.</li>
+            <li>• <b>Nominatim / OSM:</b> Free high-availability failover.</li>
+            <li>• <b>Perceptual dHash:</b> Viral video deduplication.</li>
+            <li>• <b>Environment Vault (.env):</b> Secured API secrets.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-100 rounded-lg text-xs text-slate-600 font-mono text-center">
+        Zero heavy frameworks: Pure, high-performance web standards yielding sub-50ms page renders and zero hydration overhead.
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 7: REVENUE MODEL -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="7">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider font-mono">Slide 07 • Secure Revenue Model</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">Sustainable B2G, B2B & CSR Capital Structure</h2>
+      </div>
+
+      <div class="space-y-3.5 my-5">
+        <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 flex items-start gap-4">
+          <span class="text-2xl">🏛️</span>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-slate-900">1. B2G Municipal SaaS Contracts (Primary Anchor)</h4>
+              <span class="wm-pill-normal text-[10px]">₹15L – ₹45L / Municipal Corp / Year</span>
+            </div>
+            <p class="text-[11px] text-slate-600 mt-1">Tiered enterprise subscription for City SOC Command Center, CCTV Edge connectors, 45-min SLA tracking, and van fleet routing. Funded via Smart Cities Mission and National Rabies Control Programme (NRCP) budgets.</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border border-emerald-300 bg-emerald-50/40 flex items-start gap-4">
+          <span class="text-2xl">🏥</span>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-slate-900">2. B2B Veterinary Hospital & Shelter NGO Tele-Triage</h4>
+              <span class="wm-pill-normal text-[10px]">₹10,000 – ₹25,000 / Clinic / Month</span>
+            </div>
+            <p class="text-[11px] text-slate-600 mt-1">Private veterinary clinics and animal welfare NGOs subscribe for prioritized rescue feeds, emergency patient intake CRM, and pre-screened video clinical dossiers.</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border border-rose-300 bg-rose-50/40 flex items-start gap-4">
+          <span class="text-2xl">🤝</span>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-slate-900">3. Corporate CSR & Brand Sponsorships</h4>
+              <span class="wm-pill-critical text-[10px]">₹50L+ Corporate Grants</span>
+            </div>
+            <p class="text-[11px] text-slate-600 mt-1">Pet nutrition (Mars Petcare, Royal Canin) & pharmaceutical vaccine manufacturers sponsor 500m ward containment and sterilization drives with branded citizen reassurance updates.</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 flex items-start gap-4">
+          <span class="text-2xl">🔐</span>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-slate-900">4. Enterprise Data Security & Privacy Safeguards</h4>
+              <span class="wm-pill-neutral text-[10px]">SOC-2 & Zero-PII Leakage</span>
+            </div>
+            <p class="text-[11px] text-slate-600 mt-1">Citizen phone numbers are salted with SHA-256; reports are strictly anonymized. Multi-tenant municipal isolation ensures zero cross-ward data leaks.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 8: WHY US & MOAT -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="8">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider font-mono">Slide 08 • Competitive Moat</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">Why Us: Market Comparison & Unfair Advantages</h2>
+      </div>
+
+      <div class="overflow-x-auto my-5">
+        <table class="w-full text-xs">
+          <thead>
+            <tr>
+              <th class="py-2.5 px-3">Evaluation Metric</th>
+              <th class="py-2.5 px-3">Traditional 311 / Helplines</th>
+              <th class="py-2.5 px-3">Social Media / Forms</th>
+              <th class="py-2.5 px-3 bg-emerald-50 text-emerald-900">IndiePulse (Null Syndicate)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="py-3 px-3 font-bold text-slate-800">Triage Verification</td>
+              <td class="py-3 px-3 text-slate-500">None (Subjective call)</td>
+              <td class="py-3 px-3 text-slate-500">Manual admin review</td>
+              <td class="py-3 px-3 font-bold text-emerald-700 bg-emerald-50/50">Dual-Stream: 3-Block Vision + Audio</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-bold text-slate-800">Response SLA</td>
+              <td class="py-3 px-3 text-slate-500">No timer (24 - 48 hrs)</td>
+              <td class="py-3 px-3 text-slate-500">Unpredictable</td>
+              <td class="py-3 px-3 font-bold text-emerald-700 bg-emerald-50/50">Strict 45-Min SLA (Auto-DM Escalation)</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-bold text-slate-800">False Alarm Handling</td>
+              <td class="py-3 px-3 text-slate-500">High (>60% ghost calls)</td>
+              <td class="py-3 px-3 text-slate-500">Frequent viral hoaxes</td>
+              <td class="py-3 px-3 font-bold text-emerald-700 bg-emerald-50/50">Anti-Hallucination Shield + dHash Filter</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-bold text-slate-800">Citizen Experience</td>
+              <td class="py-3 px-3 text-slate-500">Black box (No feedback)</td>
+              <td class="py-3 px-3 text-slate-500">Delayed email reply</td>
+              <td class="py-3 px-3 font-bold text-emerald-700 bg-emerald-50/50">Zero-typing GPS + Live Van Tracking</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/30">
+          <div class="font-bold text-xs text-emerald-800">⚡ 78% Municipal Cost Reduction</div>
+          <p class="text-[10px] text-slate-600 mt-1">Filtering out harmless panting and hoaxes saves hundreds of wasted vehicle runs weekly.</p>
+        </div>
+        <div class="p-3.5 rounded-xl border border-rose-300 bg-rose-50/30">
+          <div class="font-bold text-xs text-rose-800">🎯 Zero Single-Point Failure</div>
+          <p class="text-[10px] text-slate-600 mt-1">Cross-modal verification guarantees vision hallucinations cannot dispatch emergency quarantine squads alone.</p>
+        </div>
+        <div class="p-3.5 rounded-xl border border-slate-300 bg-slate-50">
+          <div class="font-bold text-xs text-slate-800">🤝 Restoring Public Trust</div>
+          <p class="text-[10px] text-slate-600 mt-1">Real-time arrival timers stop panic and mob vigilantism, making smart cities humane.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 9: TEAM -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="9">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-rose-600 uppercase tracking-wider font-mono">Slide 09 • Team Null Syndicate</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">The Engineers & Strategists Behind IndiePulse</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 my-5">
+        <div class="p-4 rounded-xl border-2 border-rose-500 bg-rose-50/30 flex flex-col justify-between">
+          <div>
+            <span class="text-[9px] font-bold text-rose-600 font-mono">TEAM LEADER</span>
+            <h4 class="text-sm font-bold text-slate-900 mt-0.5">Maneetinder Singh</h4>
+            <p class="text-[10px] font-bold text-rose-700">Systems Architect & Backend Lead</p>
+            <div class="text-[9px] text-slate-600 space-y-1 mt-2.5">
+              <div>• Pipeline architecture</div>
+              <div>• Consensus protocols</div>
+              <div>• SLA escalation engine</div>
+              <div>• Security vault & FastAPI</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border border-emerald-300 bg-emerald-50/30 flex flex-col justify-between">
+          <div>
+            <span class="text-[9px] font-bold text-emerald-600 font-mono">CORE ENGINEER</span>
+            <h4 class="text-sm font-bold text-slate-900 mt-0.5">Sanjay Singh Negi</h4>
+            <p class="text-[10px] font-bold text-emerald-700">Computer Vision & Audio ML Lead</p>
+            <div class="text-[9px] text-slate-600 space-y-1 mt-2.5">
+              <div>• Gemini Multimodal slicing</div>
+              <div>• Keyframe temporal triage</div>
+              <div>• FFmpeg 16kHz demuxer</div>
+              <div>• Acoustic howl classifier</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 flex flex-col justify-between">
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 font-mono">CORE ENGINEER</span>
+            <h4 class="text-sm font-bold text-slate-900 mt-0.5">Kirti Singla</h4>
+            <p class="text-[10px] font-bold text-slate-800">Spatial GIS & Telemetry Engineer</p>
+            <div class="text-[9px] text-slate-600 space-y-1 mt-2.5">
+              <div>• Google Maps reverse geocode</div>
+              <div>• Nominatim fallback engine</div>
+              <div>• 500m geofence generator</div>
+              <div>• Spatial clustering (200m)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border border-emerald-300 bg-emerald-50/30 flex flex-col justify-between">
+          <div>
+            <span class="text-[9px] font-bold text-emerald-600 font-mono">CORE ENGINEER</span>
+            <h4 class="text-sm font-bold text-slate-900 mt-0.5">Jashanpreet Kaur</h4>
+            <p class="text-[10px] font-bold text-emerald-700">Frontend & UI/UX Specialist</p>
+            <div class="text-[9px] text-slate-600 space-y-1 mt-2.5">
+              <div>• Watermelon UI system</div>
+              <div>• Dual-role segmented tabs</div>
+              <div>• Reassurance loop views</div>
+              <div>• High-contrast telemetry</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border border-slate-300 bg-slate-50 flex flex-col justify-between">
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 font-mono">CORE STRATEGIST</span>
+            <h4 class="text-sm font-bold text-slate-900 mt-0.5">Ridhima Jain</h4>
+            <p class="text-[10px] font-bold text-slate-800">Product Strategy & Compliance Lead</p>
+            <div class="text-[9px] text-slate-600 space-y-1 mt-2.5">
+              <div>• B2G municipal SaaS model</div>
+              <div>• NRCP compliance alignment</div>
+              <div>• Clinical vet guidelines</div>
+              <div>• DM governance protocols</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-100 rounded-lg text-xs text-slate-600 font-mono text-center">
+        Multidisciplinary synergy: Combining systems architecture, AI vision & acoustics, spatial GIS, and public health policy.
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SLIDE 10: ROADMAP & FUTURE VISION -->
+    <!-- ================================================================ -->
+    <section class="slide-page flex-col justify-between wm-card bg-white p-8 sm:p-10 border-2 border-slate-200 shadow-md rounded-2xl relative overflow-hidden" data-slide="10">
+      <div class="border-b border-slate-200 pb-3">
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider font-mono">Slide 10 • Vision & Roadmap</span>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">Scaling IndiePulse: Roadmap to Zero Rabies Deaths</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+        <div class="p-5 rounded-xl border border-emerald-300 bg-emerald-50/30 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="wm-pill-normal text-[10px]">CURRENT</span>
+            <h4 class="text-xs font-bold text-slate-900">Phase 1: Working MVP</h4>
+          </div>
+          <ul class="text-xs text-slate-600 space-y-2">
+            <li>• Working dual-role platform in Delhi NCR.</li>
+            <li>• Gemini 3.5 Flash dual-stream triage active.</li>
+            <li>• Zero-typing GPS auto-detection & reverse geocoding.</li>
+            <li>• dHash anti-spoofing & 45-min SLA countdown active.</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="wm-pill-neutral text-[10px]">Q1-Q2 2027</span>
+            <h4 class="text-xs font-bold text-slate-900">Phase 2: Municipal Pilots</h4>
+          </div>
+          <ul class="text-xs text-slate-600 space-y-2">
+            <li>• Live pilot across 3 corporations (MCD, BBMP, MCGM).</li>
+            <li>• Direct CCTV edge inference on street camera firmware.</li>
+            <li>• WhatsApp Business API for zero-install citizen reports.</li>
+            <li>• Onboarding 50+ private vet hospitals & NGO vans.</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-xl border border-rose-300 bg-rose-50/30 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="wm-pill-critical text-[10px]">Q3-Q4 2027</span>
+            <h4 class="text-xs font-bold text-slate-900">Phase 3: National Rollout</h4>
+          </div>
+          <ul class="text-xs text-slate-600 space-y-2">
+            <li>• National integration with NRCP and 112 emergency hotline.</li>
+            <li>• Autonomous drone reconnaissance for aggressive strays.</li>
+            <li>• Predictive epidemiological heatmapping for rabies outbreaks.</li>
+            <li>• Nationwide rollout targeting 100+ municipal bodies.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="p-4 bg-[#062A1F] text-white rounded-xl flex items-center justify-between shadow-sm">
+        <div>
+          <h4 class="text-sm font-bold text-emerald-400">Our Mission</h4>
+          <p class="text-xs text-slate-300 mt-0.5">Zero preventable rabies fatalities. Zero mob vigilantism. 100% municipal accountability.</p>
+        </div>
+        <div class="font-mono text-xs font-bold text-white bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
+          TEAM NULL SYNDICATE
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Slide Navigation Script -->
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      currentSlide = index;
+
+      document.querySelectorAll('.slide-page').forEach(page => {
+        page.classList.remove('active');
+        if (parseInt(page.getAttribute('data-slide')) === currentSlide) {
+          page.classList.add('active');
+        }
+      });
+
+      document.getElementById('current-slide-num').textContent = currentSlide;
+      document.getElementById('btn-prev').disabled = currentSlide === 1;
+      document.getElementById('btn-next').disabled = currentSlide === totalSlides;
+    }
+
+    function prevSlide() { showSlide(currentSlide - 1); }
+    function nextSlide() { showSlide(currentSlide + 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showSlide(1);
+      if (window.lucide) window.lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

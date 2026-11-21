@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/main.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "static/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/main.py"
+    },
+    {
+      "src": "/videos/(.*)",
+      "dest": "static/videos/$1"
+    },
+    {
+      "src": "/styles.css",
+      "dest": "static/styles.css"
+    },
+    {
+      "src": "/app.js",
+      "dest": "static/app.js"
+    },
+    {
+      "src": "/presentation.html",
+      "dest": "static/presentation.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "static/$1"
+    }
+  ]
+}

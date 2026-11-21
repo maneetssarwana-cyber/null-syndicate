@@ -1,0 +1,399 @@
+/* ==========================================================================
+   INDIEPULSE — WATERMELON UI DESIGN SYSTEM
+   High-Contrast Municipal Command Center & Citizen Community Care Architecture
+   No Vibe-Coding • Crisp Solid Hierarchy • Pine Rind & Watermelon Coral
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+:root {
+  /* Watermelon Rind (Pine & Emerald) */
+  --wm-pine-900: #042017;
+  --wm-pine-800: #062A1F;
+  --wm-pine-700: #0B3B2C;
+  --wm-emerald-600: #059669;
+  --wm-emerald-500: #10B981;
+  --wm-mint-100: #D1FAE5;
+  --wm-mint-50: #ECFDF5;
+  --wm-mint-border: #A7F3D0;
+
+  /* Watermelon Coral & Crimson (Alert & Emergency) */
+  --wm-coral-700: #BE123C;
+  --wm-coral-600: #E11D48;
+  --wm-coral-500: #F43F5E;
+  --wm-coral-100: #FFE4E6;
+  --wm-coral-50: #FFF1F2;
+  --wm-coral-border: #FECDD3;
+
+  /* Crisp Slate Foundations */
+  --wm-slate-900: #0F172A;
+  --wm-slate-800: #1E293B;
+  --wm-slate-700: #334155;
+  --wm-slate-600: #475569;
+  --wm-slate-500: #64748B;
+  --wm-slate-400: #94A3B8;
+  --wm-slate-300: #CBD5E1;
+  --wm-slate-200: #E2E8F0;
+  --wm-slate-100: #F1F5F9;
+  --wm-slate-50: #F8FAFC;
+  --wm-white: #FFFFFF;
+
+  /* Precision Tactile Shadows */
+  --wm-shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --wm-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --wm-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --wm-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+  --wm-shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+}
+
+body {
+  background-color: var(--wm-slate-50);
+  color: var(--wm-slate-900);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  letter-spacing: -0.012em;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Monospace Telemetry */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.025em;
+}
+
+/* ==========================================================================
+   SOLID WATERMELON SURFACES & CONTAINERS
+   ========================================================================== */
+.wm-card,
+.glass-primary,
+.glass-secondary {
+  background: var(--wm-white);
+  border: 1px solid var(--wm-slate-200);
+  border-radius: 14px;
+  box-shadow: var(--wm-shadow-sm);
+}
+
+.wm-card:hover {
+  border-color: var(--wm-slate-300);
+}
+
+.wm-card-elevated,
+.glass-floating {
+  background: var(--wm-white);
+  border: 1px solid var(--wm-slate-300);
+  border-radius: 14px;
+  box-shadow: var(--wm-shadow-md);
+}
+
+.wm-modal,
+.glass-modal {
+  background: var(--wm-white);
+  border: 1px solid var(--wm-slate-300);
+  border-radius: 16px;
+  box-shadow: var(--wm-shadow-xl);
+}
+
+/* Watermelon Header */
+.wm-header {
+  background: var(--wm-white);
+  border-bottom: 1px solid var(--wm-slate-200);
+  box-shadow: var(--wm-shadow-xs);
+}
+
+/* ==========================================================================
+   SEGMENTED DUAL-ROLE CONTROL (Pine Container with Crisp White Pill)
+   ========================================================================== */
+.wm-segmented,
+.apple-segmented-pill {
+  background: var(--wm-pine-800);
+  padding: 4px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.wm-segment-btn,
+.apple-segment-btn {
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #A7F3D0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wm-segment-btn:hover,
+.apple-segment-btn:hover {
+  color: var(--wm-white);
+}
+
+.wm-segment-btn.active,
+.apple-segment-btn.active {
+  background: var(--wm-white);
+  color: var(--wm-pine-900);
+  font-weight: 600;
+  box-shadow: var(--wm-shadow-sm);
+}
+
+/* ==========================================================================
+   TACTILE WATERMELON BUTTONS
+   ========================================================================== */
+.wm-btn-primary,
+.apple-btn-primary {
+  background: var(--wm-emerald-600);
+  color: var(--wm-white);
+  font-weight: 600;
+  border-radius: 9px;
+  border: 1px solid #047857;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  box-shadow: 0 1px 2px 0 rgba(5, 150, 105, 0.2);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.wm-btn-primary:hover,
+.apple-btn-primary:hover {
+  background: #047857;
+  box-shadow: 0 2px 4px 0 rgba(4, 120, 87, 0.3);
+}
+
+.wm-btn-primary:active,
+.apple-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.wm-btn-coral {
+  background: var(--wm-coral-600);
+  color: var(--wm-white);
+  font-weight: 600;
+  border-radius: 9px;
+  border: 1px solid #BE123C;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  box-shadow: 0 1px 2px 0 rgba(225, 29, 72, 0.25);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.wm-btn-coral:hover {
+  background: #BE123C;
+  box-shadow: 0 2px 4px 0 rgba(190, 18, 60, 0.35);
+}
+
+.wm-btn-coral:active {
+  transform: scale(0.98);
+}
+
+.wm-btn-secondary,
+.apple-btn-secondary {
+  background: var(--wm-white);
+  color: var(--wm-slate-700);
+  font-weight: 500;
+  border-radius: 9px;
+  border: 1px solid var(--wm-slate-300);
+  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: var(--wm-shadow-xs);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.wm-btn-secondary:hover,
+.apple-btn-secondary:hover {
+  background: var(--wm-slate-100);
+  color: var(--wm-slate-900);
+  border-color: var(--wm-slate-400);
+}
+
+.wm-btn-secondary:active,
+.apple-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* ==========================================================================
+   NAVIGATION SIDEBAR ITEMS (Pine Rind Indicator on Active)
+   ========================================================================== */
+.wm-nav-item,
+.apple-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--wm-slate-600);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wm-nav-item:hover,
+.apple-nav-item:hover {
+  background: var(--wm-slate-100);
+  color: var(--wm-slate-900);
+}
+
+.wm-nav-item.active,
+.apple-nav-item.active {
+  background: var(--wm-mint-50);
+  color: var(--wm-pine-800);
+  font-weight: 600;
+  border: 1px solid var(--wm-mint-border);
+  border-left: 3px solid var(--wm-emerald-600);
+}
+
+/* ==========================================================================
+   CRISP STATUS PILLS & BADGES
+   ========================================================================== */
+.wm-pill-critical,
+.pill-critical,
+.badge-critical {
+  background: var(--wm-coral-100);
+  color: var(--wm-coral-700);
+  border: 1px solid var(--wm-coral-border);
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 2px 9px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wm-pill-normal,
+.pill-normal,
+.badge-normal {
+  background: var(--wm-mint-100);
+  color: #065F46;
+  border: 1px solid var(--wm-mint-border);
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 2px 9px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wm-pill-warning,
+.pill-warning {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 2px 9px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wm-pill-neutral {
+  background: var(--wm-slate-100);
+  color: var(--wm-slate-600);
+  border: 1px solid var(--wm-slate-200);
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 2px 9px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   CRISP DATA TABLES (Sticky Headers, High-Contrast Borders)
+   ========================================================================== */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+th {
+  background: var(--wm-slate-100);
+  color: var(--wm-slate-600);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--wm-slate-200);
+}
+
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--wm-slate-200);
+  font-size: 12px;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   INPUTS & FORM CONTROLS
+   ========================================================================== */
+input, select, textarea {
+  background: var(--wm-white);
+  border: 1px solid var(--wm-slate-300);
+  border-radius: 8px;
+  color: var(--wm-slate-900);
+  transition: all 0.15s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--wm-emerald-600);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+/* ==========================================================================
+   CRISP TRANSITIONS (No floaty lag)
+   ========================================================================== */
+.wm-page-enter,
+.apple-page-enter {
+  animation: wmFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes wmFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Leaflet Map Crisp Border */
+#map {
+  border-radius: 12px;
+  border: 1px solid var(--wm-slate-200);
+  box-shadow: var(--wm-shadow-xs);
+}

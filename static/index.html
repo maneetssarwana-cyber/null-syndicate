@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IndiePulse — Municipal Stray Animal Triage & Citizen Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen flex flex-col antialiased bg-slate-50 text-slate-900">
+
+  <!-- ============================================================== -->
+  <!-- WATERMELON TOP NAVIGATION BAR                                  -->
+  <!-- ============================================================== -->
+  <header class="wm-header sticky top-0 z-50 bg-white border-b border-slate-200 px-4 lg:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+    <!-- Brand & Identity -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-[#062A1F] flex items-center justify-center text-emerald-400 shadow-sm border border-emerald-900">
+        <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">IndiePulse</h1>
+          <span id="role-pill-badge" class="wm-pill-normal text-[10px]">
+            Municipality SOC
+          </span>
+        </div>
+        <p class="text-xs text-slate-500" id="role-tagline">Autonomous Smart City Stray Triage & Accountability</p>
+      </div>
+    </div>
+
+    <!-- Watermelon Dual-Role Segmented Control -->
+    <div class="wm-segmented">
+      <button onclick="switchRole('municipality')" id="role-btn-muni" class="wm-segment-btn active flex items-center gap-1.5">
+        <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+        <span>Municipality SOC</span>
+      </button>
+      <button onclick="switchRole('citizen')" id="role-btn-citizen" class="wm-segment-btn flex items-center gap-1.5">
+        <i data-lucide="users" class="w-3.5 h-3.5"></i>
+        <span>Citizen Portal</span>
+      </button>
+    </div>
+
+    <!-- Actions & Controls -->
+    <div class="flex items-center gap-2.5 text-xs">
+      <div class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 font-mono text-[11px]">
+        <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span id="live-clock">Loading clock...</span>
+      </div>
+
+      <button onclick="detectUserLocation(true)" title="Detect current GPS location" class="wm-btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
+        <i data-lucide="crosshair" class="w-3.5 h-3.5 text-emerald-600"></i>
+        <span class="hidden sm:inline">My GPS</span>
+      </button>
+
+      <button onclick="resetDemoData()" title="Reset demo state" class="wm-btn-secondary p-2">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-600"></i>
+      </button>
+
+      <div class="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-200">
+        <div class="w-7 h-7 rounded-lg bg-[#062A1F] text-emerald-300 flex items-center justify-center text-xs font-bold font-mono">
+          SOC
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- High-Contrast Toast Notifications -->
+  <div id="error-toast" class="hidden fixed top-20 right-6 z-50 max-w-sm wm-card bg-white p-4 shadow-xl border-l-4 border-l-rose-600 transition-all duration-200">
+    <div class="flex items-start gap-3">
+      <div class="p-1.5 bg-rose-50 text-rose-600 rounded-lg shrink-0"><i data-lucide="alert-circle" class="w-5 h-5"></i></div>
+      <div class="flex-1">
+        <h4 class="text-xs font-bold text-slate-900" id="toast-title">Notification</h4>
+        <p class="text-[11px] text-slate-600 mt-0.5 leading-relaxed" id="toast-msg">Audio files cannot be analyzed.</p>
+      </div>
+      <button onclick="hideErrorToast()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+  </div>
+
+  <div id="success-toast" class="hidden fixed top-20 right-6 z-50 max-w-sm wm-card bg-white p-4 shadow-xl border-l-4 border-l-emerald-600 transition-all duration-200">
+    <div class="flex items-start gap-3">
+      <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+      <div class="flex-1">
+        <h4 class="text-xs font-bold text-slate-900" id="success-toast-title">Success</h4>
+        <p class="text-[11px] text-slate-600 mt-0.5 leading-relaxed" id="success-toast-msg"></p>
+      </div>
+      <button onclick="hideSuccessToast()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MAIN WORKSPACE                                                 -->
+  <!-- ============================================================== -->
+  <div class="flex-1 flex flex-col md:flex-row min-w-0 p-4 lg:p-6 gap-5">
+
+    <!-- ============================================================ -->
+    <!-- DASHBOARD 1: MUNICIPALITY SIDEBAR                            -->
+    <!-- ============================================================ -->
+    <aside id="muni-sidebar" class="role-view w-full md:w-64 lg:w-72 wm-card bg-white p-3 flex flex-col shrink-0 space-y-1">
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2">Operations</div>
+      
+      <button onclick="navigateMuni('overview')" id="muni-nav-overview" class="wm-nav-item active w-full">
+        <i data-lucide="layout-dashboard" class="w-4 h-4 text-emerald-700"></i>
+        <span>Command Centre</span>
+      </button>
+
+      <button onclick="navigateMuni('cameras')" id="muni-nav-cameras" class="wm-nav-item w-full">
+        <i data-lucide="video" class="w-4 h-4 text-slate-500"></i>
+        <span>CCTV Surveillance</span>
+      </button>
+
+      <button onclick="navigateMuni('map')" id="muni-nav-map" class="wm-nav-item w-full">
+        <i data-lucide="map" class="w-4 h-4 text-slate-500"></i>
+        <span>Ward GIS & Geofence</span>
+      </button>
+
+      <button onclick="navigateMuni('fleet')" id="muni-nav-fleet" class="wm-nav-item w-full">
+        <i data-lucide="truck" class="w-4 h-4 text-slate-500"></i>
+        <span>Van Fleet Assignment</span>
+      </button>
+
+      <button onclick="navigateMuni('analytics')" id="muni-nav-analytics" class="wm-nav-item w-full">
+        <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-500"></i>
+        <span>Incident Analytics</span>
+      </button>
+
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pt-4 pb-1">AI Diagnostics</div>
+
+      <button onclick="openGeminiModal()" class="wm-nav-item w-full">
+        <i data-lucide="sparkles" class="w-4 h-4 text-purple-600"></i>
+        <span>Gemini AI Engine</span>
+      </button>
+
+      <button onclick="navigateMuni('guide')" id="muni-nav-guide" class="wm-nav-item w-full">
+        <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
+        <span>Clinical Safety Guide</span>
+      </button>
+
+      <!-- Bottom Status Pill -->
+      <div class="mt-auto pt-3 border-t border-slate-200">
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Containment:</span>
+            <span class="font-bold text-rose-600">500m Ward Zone</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Consensus:</span>
+            <span class="font-bold text-emerald-700">3-Block Multi-Modal</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================================================ -->
+    <!-- DASHBOARD 2: CITIZEN PORTAL SIDEBAR                          -->
+    <!-- ============================================================ -->
+    <aside id="citizen-sidebar" class="role-view hidden w-full md:w-64 lg:w-72 wm-card bg-white p-3 flex flex-col shrink-0 space-y-1">
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2">Community Care</div>
+      
+      <button onclick="navigateCitizen('report')" id="citizen-nav-report" class="wm-nav-item active w-full">
+        <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-700"></i>
+        <span>Report a Stray Animal</span>
+      </button>
+
+      <button onclick="navigateCitizen('queue')" id="citizen-nav-queue" class="wm-nav-item w-full">
+        <i data-lucide="list-checks" class="w-4 h-4 text-slate-500"></i>
+        <span>My Reports & Queue</span>
+        <span id="citizen-case-count" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-800">2</span>
+      </button>
+
+      <button onclick="navigateCitizen('van')" id="citizen-nav-van" class="wm-nav-item w-full">
+        <i data-lucide="truck" class="w-4 h-4 text-slate-500"></i>
+        <span>Van Deployment Status</span>
+      </button>
+
+      <button onclick="navigateCitizen('alerts')" id="citizen-nav-alerts" class="wm-nav-item w-full">
+        <i data-lucide="bell" class="w-4 h-4 text-rose-600"></i>
+        <span>Ward Safety Alerts (500m)</span>
+      </button>
+
+      <button onclick="navigateCitizen('guide')" id="citizen-nav-guide" class="wm-nav-item w-full">
+        <i data-lucide="heart" class="w-4 h-4 text-emerald-600"></i>
+        <span>Bite Protocol & Guide</span>
+      </button>
+
+      <div class="mt-auto pt-3 border-t border-slate-200">
+        <div class="p-3 rounded-xl border border-rose-200 bg-rose-50/70 space-y-2">
+          <div class="text-xs font-bold text-rose-700 flex items-center gap-1.5">
+            <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+            <span>State Escalation Hotline</span>
+          </div>
+          <p class="text-[11px] text-slate-600 leading-relaxed">If municipal squads breach the 45-min SLA timer:</p>
+          <a href="tel:1800112026" class="wm-btn-coral w-full py-2 text-[11px]">
+            Call 1800-11-2026 (Free)
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================================================== -->
+    <!-- CONTENT PAGES (MUNICIPALITY vs CITIZEN)                        -->
+    <!-- ============================================================== -->
+    <main class="flex-1 min-w-0">
+
+      <!-- ============================================================ -->
+      <!-- SECTION A: MUNICIPALITY SCREENS                              -->
+      <!-- ============================================================ -->
+      <div id="muni-pages" class="role-view space-y-6">
+        
+        <!-- Muni Overview -->
+        <section id="muni-page-overview" class="muni-content wm-page-enter space-y-6">
+          <!-- Metric Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="wm-card bg-white p-5 border-l-4 border-l-slate-400">
+              <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Active Cases</span>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-slate-900 tracking-tight" id="muni-metric-total">2</span>
+                <span class="text-xs text-slate-500">Total Dossiers</span>
+              </div>
+            </div>
+
+            <div class="wm-card bg-white p-5 border-l-4 border-l-rose-500">
+              <span class="text-xs font-bold text-rose-600 uppercase tracking-wide">Rabies Alerts</span>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-rose-600 tracking-tight" id="muni-metric-urgent">1</span>
+                <span class="text-xs text-rose-600 font-semibold">500m geofence active</span>
+              </div>
+            </div>
+
+            <div class="wm-card bg-white p-5 border-l-4 border-l-emerald-600">
+              <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Available Units</span>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-emerald-700 tracking-tight">3</span>
+                <span class="text-xs text-emerald-700 font-semibold">Ready in Depot</span>
+              </div>
+            </div>
+
+            <div class="wm-card bg-white p-5 border-l-4 border-l-[#062A1F]">
+              <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Active Dispatches</span>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-slate-900 tracking-tight" id="muni-metric-dispatched">1</span>
+                <span class="text-xs text-slate-500">On-site / en-route</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two-Column Workspace -->
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Left: Table & Map -->
+            <div class="col-span-12 lg:col-span-7 flex flex-col gap-6">
+              <div class="wm-card bg-white p-5">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+                  <div>
+                    <h3 class="text-sm font-bold text-slate-900">Municipal Incident Queue</h3>
+                    <p class="text-xs text-slate-500">Select a case to inspect 3-block consensus, audio triage & dispatch units</p>
+                  </div>
+                  <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">Live Polling</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead>
+                      <tr>
+                        <th class="py-2.5 px-3">Case ID</th>
+                        <th class="py-2.5 px-3">Locality</th>
+                        <th class="py-2.5 px-3">Priority</th>
+                        <th class="py-2.5 px-3">Status</th>
+                        <th class="py-2.5 px-3 text-right">Inspect</th>
+                      </tr>
+                    </thead>
+                    <tbody id="muni-overview-table" class="divide-y divide-slate-100"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Map View -->
+              <div class="wm-card bg-white p-5 min-h-[380px] flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="map" class="w-4 h-4 text-emerald-700"></i>
+                    <h3 class="text-sm font-bold text-slate-900">Ward Surveillance & Containment Grid</h3>
+                  </div>
+                  <span class="text-xs text-rose-600 font-semibold flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                    500m Containment Circle
+                  </span>
+                </div>
+                <div id="map" class="w-full flex-1 rounded-xl overflow-hidden min-h-[300px]"></div>
+              </div>
+            </div>
+
+            <!-- Right: Selected Case Inspector -->
+            <div class="col-span-12 lg:col-span-5 flex flex-col">
+              <div id="muni-selected-case-panel" class="wm-card bg-white p-5 flex flex-col flex-1 sticky top-20 shadow-sm"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Muni CCTV Review -->
+        <section id="muni-page-cameras" class="muni-content hidden wm-page-enter space-y-6">
+          <div class="grid grid-cols-12 gap-6">
+            <div class="col-span-12 lg:col-span-4 flex flex-col gap-3">
+              <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">CCTV Grid Feeds</div>
+
+              <div onclick="selectCamera('CAM-NDEL-W4-08')" class="wm-card bg-white p-4 cursor-pointer hover:border-slate-400 border-l-4 border-l-rose-500 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900 font-mono">CAM-NDEL-W4-08</span>
+                  <span class="wm-pill-critical text-[10px]">Rabies Alert</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Ward 4 North Ring Road</p>
+              </div>
+
+              <div onclick="selectCamera('CAM-NDEL-W7-14')" class="wm-card bg-white p-4 cursor-pointer hover:border-slate-400 border-l-4 border-l-emerald-600 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900 font-mono">CAM-NDEL-W7-14</span>
+                  <span class="wm-pill-normal text-[10px]">Monitoring</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Civic Market Alleyway</p>
+              </div>
+
+              <div onclick="selectCamera('CAM-SOUTH-02')" class="wm-card bg-white p-4 cursor-pointer hover:border-slate-400 border-l-4 border-l-slate-300 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900 font-mono">CAM-SOUTH-02</span>
+                  <span class="wm-pill-neutral text-[10px]">Clear</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Sector 9 Community Park</p>
+              </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-8 flex flex-col">
+              <div id="muni-camera-review-detail" class="wm-card bg-white p-5 space-y-4"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Muni Full Map -->
+        <section id="muni-page-map" class="muni-content hidden wm-page-enter space-y-6">
+          <div class="wm-card bg-white p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-bold text-slate-900">Full-Screen Municipal Ward GIS Grid</h3>
+                <p class="text-xs text-slate-500">Active 500m geofence safety zones, 200m spatial clusters, and field van coordinates.</p>
+              </div>
+              <span class="wm-pill-normal text-xs px-3 py-1">Ward 4 & 7 Real-Time</span>
+            </div>
+            <div id="muni-large-map" class="w-full h-[550px] rounded-xl overflow-hidden border border-slate-200"></div>
+          </div>
+        </section>
+
+        <!-- Muni Fleet Assignment -->
+        <section id="muni-page-fleet" class="muni-content hidden wm-page-enter space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Rescue Squads & Van Fleet Assignment</h3>
+              <p class="text-xs text-slate-500">Direct tactical assignment for animal welfare and quarantine squads</p>
+            </div>
+            <span class="wm-pill-normal text-xs px-3 py-1">3 Units Ready</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="wm-card bg-white p-5 flex flex-col justify-between border-t-4 border-t-rose-600">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900">Quarantine Net Squad #1</span>
+                  <span class="wm-pill-critical text-[10px]">Standby</span>
+                </div>
+                <p class="text-xs text-slate-500">Assigned strictly to confirmed rabies emergencies</p>
+                <div class="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
+                  <div><b>Gear:</b> Catch poles, Kevlar bite suits, isolation cages</div>
+                  <div><b>Base:</b> Central Ward 4 Depot</div>
+                </div>
+              </div>
+              <button onclick="quickDispatchTeam('Quarantine Net Squad #1')" class="wm-btn-coral mt-4 w-full text-xs">
+                Dispatch to Active Incident
+              </button>
+            </div>
+
+            <div class="wm-card bg-white p-5 flex flex-col justify-between border-t-4 border-t-emerald-600">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900">Mobile Vet Clinic Van #2</span>
+                  <span class="wm-pill-normal text-[10px]">Dispatched</span>
+                </div>
+                <p class="text-xs text-slate-500">On-site surgical trauma dressing and outpatient pain care</p>
+                <div class="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
+                  <div><b>Lead:</b> Dr. Sharma (Veterinary Officer)</div>
+                  <div><b>Current Case:</b> CASE-VET-3312</div>
+                </div>
+              </div>
+              <div class="wm-pill-normal mt-4 py-2 text-center text-xs justify-center font-bold">
+                On-Site in Ward 7
+              </div>
+            </div>
+
+            <div class="wm-card bg-white p-5 flex flex-col justify-between border-t-4 border-t-slate-400">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900">Rapid Response Van #3</span>
+                  <span class="wm-pill-normal text-[10px]">Available</span>
+                </div>
+                <p class="text-xs text-slate-500">General animal welfare, hydration aid & transport</p>
+                <div class="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
+                  <div><b>Gear:</b> Water dispensers, animal stretchers, first aid</div>
+                  <div><b>Base:</b> Civic Centre Hub</div>
+                </div>
+              </div>
+              <button onclick="quickDispatchTeam('Rapid Response Van #3')" class="wm-btn-primary mt-4 w-full text-xs">
+                Dispatch to Active Incident
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Muni Analytics -->
+        <section id="muni-page-analytics" class="muni-content hidden wm-page-enter space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="wm-card bg-white p-5">
+              <h3 class="text-sm font-bold text-slate-900 mb-1">Incidents by Severity</h3>
+              <p class="text-xs text-slate-500 mb-4">Breakdown of triage tiers across municipal wards</p>
+              <div class="h-64 flex items-center justify-center"><canvas id="chart-severity"></canvas></div>
+            </div>
+            <div class="wm-card bg-white p-5">
+              <h3 class="text-sm font-bold text-slate-900 mb-1">Ward Response Compliance</h3>
+              <p class="text-xs text-slate-500 mb-4">Average response arrival times within 45-minute SLA</p>
+              <div class="h-64 flex items-center justify-center"><canvas id="chart-resolution"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Muni Clinical Guide -->
+        <section id="muni-page-guide" class="muni-content hidden wm-page-enter space-y-6">
+          <div class="wm-card bg-white p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900">Clinical Triage Guidelines for Municipal Staff</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Verify sustained neurological signs across all 3 temporal slices before authorizing animal quarantine teams. Heat panting cases must be routed to hydration relief, never quarantine.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-1.5">
+                <span class="text-xs font-bold text-emerald-800">✅ Normal Heat Panting</span>
+                <p class="text-xs text-slate-600">Fast rhythm, clear watery saliva, responsive gaze, dog seeks shade. Route to welfare hydration.</p>
+              </div>
+              <div class="p-4 rounded-xl border border-rose-200 bg-rose-50/50 space-y-1.5">
+                <span class="text-xs font-bold text-rose-800">🚨 Suspected Furious/Paralytic Rabies</span>
+                <p class="text-xs text-slate-600">Thick ropey saliva, dropped lower jaw, ataxia/stumbling, acoustic laryngeal paralysis howl. Quarantine Net Squad mandatory.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- SECTION B: CITIZEN COMMUNITY SCREENS                         -->
+      <!-- ============================================================ -->
+      <div id="citizen-pages" class="role-view hidden space-y-6 max-w-4xl mx-auto">
+        
+        <!-- Citizen Report Portal -->
+        <section id="citizen-page-report" class="citizen-content wm-page-enter space-y-6">
+          <div class="wm-card bg-white p-6 space-y-5">
+            <div class="border-b border-slate-200 pb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <h3 class="text-base font-bold text-slate-900">Report a Sick, Injured, or Aggressive Dog</h3>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">
+                Upload a short video. Our automated triage system checks video frames + sound to determine if the dog needs an <b>Emergency Doctor Van</b> or a <b>Rabies Containment Squad</b>.
+              </p>
+            </div>
+
+            <form id="citizen-form" onsubmit="handleCitizenSubmit(event)" class="space-y-5">
+              <!-- 1. Video Upload -->
+              <div>
+                <label class="text-xs font-bold text-slate-900 flex items-center justify-between mb-2">
+                  <span>1. Video Footage (MP4 / MOV)</span>
+                  <span class="text-[11px] text-rose-600 font-semibold">⚠️ Video only (Audio/MP3 rejected)</span>
+                </label>
+
+                <!-- 1-Click Demo Loaders -->
+                <div class="mb-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center gap-2">
+                  <span class="text-[10px] font-bold text-slate-500 uppercase">Quick Demo Clips:</span>
+                  <button type="button" onclick="loadSampleVideo('rabid_dog_sample.mp4', 'Near Metro Gate 2, North Ring Road', 'New Delhi', 'Delhi', 28.6142, 77.2092)" class="wm-pill-critical px-2.5 py-1 text-[11px] cursor-pointer">
+                    🚨 Rabies Sample (New Delhi)
+                  </button>
+                  <button type="button" onclick="loadSampleVideo('summer_panting_sample.mp4', 'Sector 9 Community Park', 'South Delhi', 'Delhi', 28.6210, 77.2180)" class="wm-pill-normal px-2.5 py-1 text-[11px] cursor-pointer">
+                    ☀️ Summer Panting (South Delhi)
+                  </button>
+                  <button type="button" onclick="loadSampleVideo('fracture_wound_sample.mp4', 'Civic Market Alleyway, Ward 7', 'Central Delhi', 'Delhi', 28.6189, 77.2145)" class="wm-btn-secondary py-0.5 px-2.5 text-[11px]">
+                    🩺 Fracture (Central Delhi)
+                  </button>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-4 bg-slate-50/50 text-center cursor-pointer transition">
+                  <input type="file" id="citizen-file" accept="video/*" onchange="validateFileInput(this)" class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#062A1F] file:text-white cursor-pointer">
+                </div>
+
+                <!-- Triage Capabilities Telemetry Banner -->
+                <div class="mt-2.5 space-y-1.5">
+                  <div class="flex items-center gap-1.5 text-[11px] text-emerald-700 font-medium">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>Dual-Stream Triage: Analyzes both visual video frames (gait & mouth) + audio acoustics (rabies howl vs pain whimper).</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-4 text-[10px] text-slate-600 font-medium pt-1 border-t border-slate-100">
+                    <span class="flex items-center gap-1 text-emerald-700 font-semibold">
+                      <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      pHash Anti-Spoofing & EXIF Capture Freshness Active
+                    </span>
+                    <span class="flex items-center gap-1 text-blue-700 font-semibold">
+                      <i data-lucide="shield" class="w-3.5 h-3.5 text-blue-600"></i>
+                      Anti-Hallucination Cross-Modal Shield Enabled
+                    </span>
+                  </div>
+                </div>
+
+                <div id="file-error-hint" class="hidden text-xs text-rose-600 font-semibold mt-2">
+                  Audio files (.mp3) cannot be triaged without video. Please choose a video recording (.mp4, .mov).
+                </div>
+              </div>
+
+              <!-- 2. Auto-Detected Location (Zero Manual Hassle) -->
+              <div class="bg-slate-50 rounded-xl p-4 space-y-2.5 border border-slate-200">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs font-bold text-slate-900">Auto-Detected Live Location</span>
+                    <span id="loc-provider-badge" class="wm-pill-normal text-[9px]">
+                      Google Maps + Live GPS
+                    </span>
+                  </div>
+                  <button type="button" onclick="autoDetectLocation(true)" class="wm-btn-secondary px-2.5 py-1 text-[10px] flex items-center gap-1">
+                    <i data-lucide="refresh-cw" class="w-3 h-3 text-emerald-700"></i>
+                    <span>Refresh GPS</span>
+                  </button>
+                </div>
+
+                <!-- Displayed Resolved Address -->
+                <div class="p-3 rounded-lg bg-white border border-slate-200 flex items-start gap-2.5 shadow-xs">
+                  <i data-lucide="map-pin" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+                  <div class="flex-1 min-w-0">
+                    <div id="loc-display-address" class="text-xs font-bold text-slate-900 truncate">
+                      Fetching your live GPS location...
+                    </div>
+                    <div id="loc-display-sub" class="text-[10px] text-slate-500 mt-0.5 font-mono">
+                      Latitude: 28.6145 • Longitude: 77.2095
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hidden inputs to submit coordinates & resolved locality smoothly -->
+                <input type="hidden" id="citizen-state" value="Delhi">
+                <input type="hidden" id="citizen-district" value="New Delhi">
+                <input type="hidden" id="citizen-landmark" value="Near Metro Gate 2, North Ring Road">
+                <input type="hidden" id="citizen-lat" value="28.6145">
+                <input type="hidden" id="citizen-lon" value="77.2095">
+                <input type="hidden" id="citizen-reporter" value="Local Resident">
+              </div>
+
+              <button type="submit" class="wm-btn-primary w-full py-3.5 text-xs font-bold shadow-md">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Submit Report & Check Dog Health</span>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Citizen Queue -->
+        <section id="citizen-page-queue" class="citizen-content hidden wm-page-enter space-y-6">
+          <div class="wm-card bg-white p-6 space-y-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">My Reports & Neighborhood Case Queue</h3>
+              <p class="text-xs text-slate-500">Track real-time progress on reported cases and see whether a rescue van has arrived.</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr>
+                    <th class="py-3 px-3">Case ID</th>
+                    <th class="py-3 px-3">Locality</th>
+                    <th class="py-3 px-3">Triage Verdict</th>
+                    <th class="py-3 px-3">Municipal Van Status</th>
+                    <th class="py-3 px-3">City Timer</th>
+                  </tr>
+                </thead>
+                <tbody id="citizen-cases-table" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Citizen Van Status -->
+        <section id="citizen-page-van" class="citizen-content hidden wm-page-enter space-y-6">
+          <div class="wm-card bg-white p-6 space-y-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Live Municipal Van Deployment Status</h3>
+              <p class="text-xs text-slate-500">Check whether animal control vans or mobile veterinary ambulances are deployed in your ward.</p>
+            </div>
+            <div id="citizen-van-list" class="space-y-3"></div>
+          </div>
+        </section>
+
+        <!-- Citizen Safety Alerts -->
+        <section id="citizen-page-alerts" class="citizen-content hidden wm-page-enter space-y-6">
+          <div class="wm-card bg-white p-6 space-y-4 border-l-4 border-l-rose-500">
+            <div class="flex items-center gap-2 text-rose-600">
+              <i data-lucide="shield-alert" class="w-5 h-5"></i>
+              <h3 class="text-base font-bold text-slate-900">500-Meter Neighborhood Rabies Containment Zones</h3>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              When our AI engine confirms rabies symptoms across all 3 temporal video slices, a <b>500m safety advisory</b> is published here so families can keep pets and children safely indoors.
+            </p>
+            <div id="citizen-alerts-container" class="space-y-3"></div>
+          </div>
+        </section>
+
+        <!-- Citizen Safety Guide -->
+        <section id="citizen-page-guide" class="citizen-content hidden wm-page-enter space-y-6">
+          <div class="wm-card bg-white p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900">Dog Safety & Bite Emergency First-Aid</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 space-y-2">
+                <div class="font-bold text-xs text-emerald-800 flex items-center gap-1.5">
+                  <i data-lucide="sun" class="w-4 h-4 text-emerald-600"></i> Thirsty Panting (Harmless)
+                </div>
+                <p class="text-xs text-slate-700">Clean tongue, clear watery saliva, dog resting in shade. <b>Action:</b> Leave a bowl of fresh clean water.</p>
+              </div>
+
+              <div class="p-4 rounded-xl border border-rose-200 bg-rose-50/60 space-y-2">
+                <div class="font-bold text-xs text-rose-800 flex items-center gap-1.5">
+                  <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600"></i> Suspected Rabies (Danger)
+                </div>
+                <p class="text-xs text-slate-700">Thick ropey drool, jaw hanging open, drunken stumbling walk. <b>Action:</b> Keep 10m distance, report immediately.</p>
+              </div>
+            </div>
+
+            <!-- Emergency Bite Protocol -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+              <div class="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                <i data-lucide="first-aid" class="w-4 h-4 text-rose-600"></i> Emergency First-Aid If Bitten:
+              </div>
+              <ol class="text-xs text-slate-600 list-decimal list-inside space-y-1">
+                <li><b>Wash immediately:</b> Flush wound with running tap water and soap continuously for 15 minutes.</li>
+                <li><b>Apply antiseptic:</b> Apply Povidone-Iodine solution if available.</li>
+                <li><b>Hospital:</b> Visit nearest government hospital within 24 hours for Post-Exposure Prophylaxis (PEP).</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Watermelon Modal (Gemini Key) -->
+  <div id="gemini-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4 transition-all duration-200">
+    <div class="wm-modal bg-white max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-purple-600"></i>
+          <span>Gemini AI Engine Access</span>
+        </h3>
+        <button onclick="closeGeminiModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Connect Google's <b>Gemini 2.5 Flash / 3.5 Flash</b> multimodal API for real-time video keyframe screening and clinical acoustic triage.
+      </p>
+      
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-semibold text-slate-600">Google Gemini API Key (.env secured):</label>
+        <input type="password" id="gemini-key-input" placeholder="Enter or paste Gemini API key..." class="w-full text-xs px-3.5 py-2.5 text-slate-900 font-mono">
+      </div>
+
+      <div id="gemini-test-result" class="hidden text-[11px] p-2.5 rounded-lg border"></div>
+
+      <div class="flex items-center justify-between text-xs pt-1">
+        <span id="gemini-status-badge" class="text-[11px] text-slate-500">Checking status...</span>
+        <div class="flex items-center gap-2">
+          <button onclick="testGeminiKeyLive()" class="wm-btn-secondary px-3 py-1.5 text-xs">Test</button>
+          <button onclick="saveGeminiKey()" class="wm-btn-primary px-4 py-1.5 text-xs">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+  <script src="app.js"></script>
+</body>
+</html>
