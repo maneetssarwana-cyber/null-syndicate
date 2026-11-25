@@ -28,6 +28,10 @@
       "dest": "static/app.js"
     },
     {
+      "src": "/phone_cam.html",
+      "dest": "static/phone_cam.html"
+    },
+    {
       "src": "/presentation.html",
       "dest": "static/presentation.html"
     },

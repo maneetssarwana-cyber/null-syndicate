@@ -12,7 +12,8 @@ from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+import base64
+from fastapi.responses import JSONResponse, Response
 
 from config import (
     SPATIAL_DEDUP_RADIUS_METERS,
@@ -404,17 +405,52 @@ def reverse_geocode(lat: float, lon: float):
 
 @app.get("/api/stream/active")
 def get_active_streams():
-    """Returns all active video streaming feeds, auto-pruning empty registration ghost nodes."""
-    # If any stream has live frames, prune ghost nodes that don't have frames
-    has_live = any(s.get("last_frame") for s in ACTIVE_STREAMS.values())
-    if has_live:
+    """Returns all active video streaming feeds, ensuring a single canonical smartphone node."""
+    # Ensure any smartphone stream is consolidated into PHONE-CAM-01
+    phone_streams = [s for s in ACTIVE_STREAMS.values() if s.get("type") == "SMARTPHONE_STREAM"]
+    if len(phone_streams) > 1:
+        # Keep the one with the live frame or most recent activity
+        best_phone = max(phone_streams, key=lambda s: (1 if s.get("last_frame") else 0, s.get("fps", 0)))
+        best_phone["id"] = "PHONE-CAM-01"
         for sid, s in list(ACTIVE_STREAMS.items()):
-            if not s.get("last_frame"):
+            if s.get("type") == "SMARTPHONE_STREAM" and sid != "PHONE-CAM-01":
                 del ACTIVE_STREAMS[sid]
+        ACTIVE_STREAMS["PHONE-CAM-01"] = best_phone
 
     streams = list(ACTIVE_STREAMS.values())
     streams.sort(key=lambda s: (1 if s.get("last_frame") else 0, s.get("fps", 0)), reverse=True)
     return streams
+
+@app.get("/api/stream/live_frame.jpg")
+def get_live_stream_jpeg():
+    """Decodes and serves the latest live JPEG frame directly as image/jpeg."""
+    # Look for PHONE-CAM-01 first, or any active phone stream
+    stream = ACTIVE_STREAMS.get("PHONE-CAM-01")
+    if not stream or not stream.get("last_frame"):
+        for s in ACTIVE_STREAMS.values():
+            if s.get("last_frame"):
+                stream = s
+                break
+
+    if stream and stream.get("last_frame"):
+        raw_b64 = stream["last_frame"]
+        if "," in raw_b64:
+            raw_b64 = raw_b64.split(",", 1)[1]
+        try:
+            img_bytes = base64.b64decode(raw_b64)
+            return Response(
+                content=img_bytes,
+                media_type="image/jpeg",
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0"
+                }
+            )
+        except Exception as e:
+            print(f"[LiveJPEG] Decode error: {e}")
+
+    raise HTTPException(status_code=404, detail="No live camera frame received yet")
 
 @app.post("/api/stream/register")
 def register_phone_stream(
@@ -423,13 +459,18 @@ def register_phone_stream(
     fps: int = Form(24),
     battery_pct: int = Form(95)
 ):
-    """Registers a new mobile device as an active surveillance stream."""
+    """Registers a mobile device as the single canonical active surveillance stream PHONE-CAM-01."""
     device_model_str = device_model if isinstance(device_model, str) else getattr(device_model, "default", "Smartphone Camera Node")
     res_str = resolution if isinstance(resolution, str) else getattr(resolution, "default", "1280x720")
     fps_val = fps if isinstance(fps, (int, float)) else getattr(fps, "default", 24)
     bat_val = battery_pct if isinstance(battery_pct, (int, float)) else getattr(battery_pct, "default", 95)
 
-    stream_id = f"PHONE-CAM-{uuid.uuid4().hex[:4].upper()}"
+    # Prune any previous phone entries to eliminate ghost duplicate sessions
+    for sid in list(ACTIVE_STREAMS.keys()):
+        if sid.startswith("PHONE-"):
+            del ACTIVE_STREAMS[sid]
+
+    stream_id = "PHONE-CAM-01"
     new_stream = {
         "id": stream_id,
         "name": f"Mobile Stream ({device_model_str})",
@@ -468,6 +509,7 @@ def push_stream_frame(
 ):
     """
     Receives incoming video frame and audio packet from a phone camera stream.
+    Consolidates any phone stream into canonical PHONE-CAM-01 to avoid duplicate sessions.
     Executes real-time transfer-learning CV & audio classification.
     """
     t0 = time.time()
@@ -481,11 +523,20 @@ def push_stream_frame(
     fps_val = _clean(fps, 24)
     lat_val = _clean(latency_ms, 32.0)
 
-    stream = ACTIVE_STREAMS.get(stream_id)
+    # Route all phone streams to canonical PHONE-CAM-01
+    canonical_id = "PHONE-CAM-01" if stream_id.startswith("PHONE") else stream_id
+    
+    # Clean up any rogue ghost phone keys
+    if canonical_id == "PHONE-CAM-01":
+        for k in list(ACTIVE_STREAMS.keys()):
+            if k.startswith("PHONE") and k != "PHONE-CAM-01":
+                del ACTIVE_STREAMS[k]
+
+    stream = ACTIVE_STREAMS.get(canonical_id)
     if not stream:
         stream = {
-            "id": stream_id,
-            "name": f"Mobile Node {stream_id}",
+            "id": canonical_id,
+            "name": "Live Smartphone Camera",
             "type": "SMARTPHONE_STREAM",
             "device_model": "Connected Smartphone",
             "ip_address": "127.0.0.1",
@@ -498,7 +549,7 @@ def push_stream_frame(
             "last_detection": None,
             "registered_at": datetime.utcnow().isoformat()
         }
-        ACTIVE_STREAMS[stream_id] = stream
+        ACTIVE_STREAMS[canonical_id] = stream
 
     stream["battery_pct"] = bat_val
     stream["fps"] = fps_val

@@ -807,7 +807,16 @@ async function fetchActiveStreams() {
   try {
     const res = await fetch("/api/stream/active");
     if (!res.ok) return;
-    activeStreamsData = await res.json();
+    const raw = await res.json();
+    // Store as dictionary keyed by stream id for instant lookups
+    activeStreamsData = {};
+    if (Array.isArray(raw)) {
+      raw.forEach(s => {
+        if (s && s.id) activeStreamsData[s.id] = s;
+      });
+    } else if (raw && typeof raw === "object") {
+      activeStreamsData = raw;
+    }
     renderStreamsList();
     renderStreamPlayer();
   } catch (err) {
@@ -977,11 +986,18 @@ function renderStreamPlayer() {
   if (existingImg && existingId === selectedStreamId) {
     if (phoneData && phoneData.last_frame) {
       existingImg.src = phoneData.last_frame;
+    } else {
+      existingImg.src = "/api/stream/live_frame.jpg?t=" + Date.now();
     }
     const batEl = document.getElementById("hud-bat-label");
     if (batEl && phoneData) batEl.textContent = `🔋 ${phoneData.battery_pct}%`;
     const latEl = document.getElementById("hud-lat-label");
     if (latEl && phoneData) latEl.textContent = `📶 ${Math.round(phoneData.latency_ms)}ms`;
+    
+    const hudBadge = document.getElementById("hud-prediction-badge");
+    if (hudBadge && det.predicted_class) {
+      hudBadge.textContent = `CANINE_CLASSIFIER: ${det.predicted_class} (${confidencePct}%)`;
+    }
     return;
   }
   panel.setAttribute("data-stream-id", selectedStreamId);
@@ -1004,11 +1020,11 @@ function renderStreamPlayer() {
 
     <!-- Live Stream Video / Canvas HUD Player -->
     <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-200 flex items-center justify-center shadow-xs">
-      ${phoneData && phoneData.last_frame ? `
-        <img id="phone-stream-img" src="${phoneData.last_frame}" alt="Live Phone Stream" class="w-full h-full object-cover">
-      ` : `
-        <img id="phone-stream-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'><rect width='640' height='360' fill='%230f172a'/><text x='50%25' y='50%25' fill='%2364748b' font-family='sans-serif' font-size='14' text-anchor='middle'>Awaiting incoming camera frames from phone...</text></svg>" alt="Live Phone Stream" class="w-full h-full object-cover">
-      `}
+      <img id="phone-stream-img" 
+        src="${phoneData && phoneData.last_frame ? phoneData.last_frame : '/api/stream/live_frame.jpg'}" 
+        alt="Live Phone Stream" 
+        class="w-full h-full object-cover" 
+        onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'640\\' height=\\'360\\' viewBox=\\'0 0 640 360\\'><rect width=\\'640\\' height=\\'360\\' fill=\\'%230f172a\\'/><text x=\\'50%25\\' y=\\'50%25\\' fill=\\'%2364748b\\' font-family=\\'sans-serif\\' font-size=\\'14\\' text-anchor=\\'middle\\'>Awaiting incoming camera frames from phone...</text></svg>'">
       
       <!-- Live HUD Overlays -->
       <div class="absolute top-3 left-3 bg-slate-900/90 text-white text-[10px] font-mono px-2.5 py-1 rounded-lg z-10 flex items-center gap-2 border border-slate-700">

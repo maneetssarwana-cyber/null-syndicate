@@ -178,15 +178,10 @@
     }
 
     const myDeviceModel = detectRealDeviceName();
-    let streamId = sessionStorage.getItem("indiepulse_stream_id") || "";
+    const streamId = "PHONE-CAM-01";
     let batteryLevel = 90;
+    sessionStorage.setItem("indiepulse_stream_id", streamId);
 
-    // Read stream ID from URL params if present
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("stream_id")) {
-      streamId = urlParams.get("stream_id");
-      sessionStorage.setItem("indiepulse_stream_id", streamId);
-    }
     if (streamId) {
       document.getElementById("node-id-badge").textContent = streamId;
     }
