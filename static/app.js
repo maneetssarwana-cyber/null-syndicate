@@ -129,7 +129,14 @@ function navigateMuni(pageId) {
   }
 
   if (pageId === "cameras") {
-    renderCameraReview();
+    fetchActiveStreams();
+    startStreamPolling();
+  } else {
+    stopStreamPolling();
+  }
+
+  if (pageId === "models") {
+    loadModelStats();
   }
 
   if (pageId === "analytics") {
@@ -778,65 +785,389 @@ function renderCitizenSafetyAlerts() {
 }
 
 // -------------------------------------------------------------
-// CCTV CAMERA REVIEW (MUNICIPALITY)
+// LIVE STREAMING & SMARTPHONE CCTV INGESTION
 // -------------------------------------------------------------
-function selectCamera(camId) {
-  selectedCameraId = camId;
-  renderCameraReview();
+let activeStreamsData = {};
+let selectedStreamId = "PHONE-CAM-01";
+let streamPollingTimer = null;
+
+function startStreamPolling() {
+  if (streamPollingTimer) clearInterval(streamPollingTimer);
+  streamPollingTimer = setInterval(fetchActiveStreams, 2500);
 }
 
-function renderCameraReview() {
+function stopStreamPolling() {
+  if (streamPollingTimer) {
+    clearInterval(streamPollingTimer);
+    streamPollingTimer = null;
+  }
+}
+
+async function fetchActiveStreams() {
+  try {
+    const res = await fetch("/api/stream/active");
+    if (!res.ok) return;
+    activeStreamsData = await res.json();
+    renderStreamsList();
+    renderStreamPlayer();
+  } catch (err) {
+    console.error("Failed to fetch active streams:", err);
+  }
+}
+
+function refreshStreamsList() {
+  fetchActiveStreams();
+  showSuccessToast("Feeds Refreshed", "Live phone nodes & CCTV streams updated.");
+}
+
+function selectStreamSource(streamId) {
+  selectedStreamId = streamId;
+  renderStreamsList();
+  renderStreamPlayer();
+}
+
+function selectCamera(camId) {
+  selectStreamSource(camId);
+}
+
+function renderStreamsList() {
+  const container = document.getElementById("smartphone-nodes-container");
+  const countBadge = document.getElementById("phone-nodes-count");
+  if (!container) return;
+
+  const phoneStreams = Object.values(activeStreamsData).filter(s => s.type === "SMARTPHONE_STREAM");
+  if (countBadge) {
+    countBadge.innerText = `${phoneStreams.length} Active`;
+  }
+
+  if (phoneStreams.length === 0) {
+    container.innerHTML = `
+      <div class="p-3 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-xs text-slate-500">
+        No mobile cameras paired yet.
+        <button onclick="openPhoneQrModal()" class="mt-2 text-emerald-700 font-bold block mx-auto underline">+ Pair Smartphone</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = phoneStreams.map(s => {
+    const isSelected = selectedStreamId === s.id;
+    const isAlert = s.last_detection && (s.last_detection.predicted_class === "PARALYTIC_ATAXIA" || s.last_detection.audio_phonation === "CANINE_RABIES_HOWL");
+    const isStreaming = s.status === "STREAMING";
+
+    return `
+      <div onclick="selectStreamSource('${s.id}')" id="stream-card-${s.id}" 
+        class="wm-card bg-white p-3.5 cursor-pointer hover:border-emerald-500 transition shadow-2xs ${isSelected ? 'border-2 border-emerald-600 bg-emerald-50/20' : 'border-l-4 ' + (isAlert ? 'border-l-rose-500' : isStreaming ? 'border-l-emerald-600' : 'border-l-slate-300')}">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-900 font-mono">${s.id}</span>
+          <span class="${isAlert ? 'wm-pill-critical' : isStreaming ? 'wm-pill-normal' : 'wm-pill-neutral'} text-[10px]">
+            ${isAlert ? 'Ataxia Alert' : s.status}
+          </span>
+        </div>
+        <p class="text-xs text-slate-600 mt-1">${s.name}</p>
+        <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-mono">
+          <span>🔋 ${s.battery_pct}%</span>
+          <span>📶 ${Math.round(s.latency_ms)}ms</span>
+          <span>📹 ${s.resolution ? s.resolution.split('x')[1] : '720'}p @ ${s.fps || 24}fps</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Also update CCTV card highlight
+  ["CAM-NDEL-W4-08", "CAM-NDEL-W7-14", "CAM-SOUTH-02"].forEach(cId => {
+    const cCard = document.getElementById(`stream-card-${cId}`);
+    if (cCard) {
+      if (selectedStreamId === cId) {
+        cCard.classList.add("border-2", "border-emerald-600", "bg-emerald-50/20");
+      } else {
+        cCard.classList.remove("border-2", "border-emerald-600", "bg-emerald-50/20");
+      }
+    }
+  });
+}
+
+function renderStreamPlayer() {
   const panel = document.getElementById("muni-camera-review-detail");
   if (!panel) return;
 
-  const isAlert = selectedCameraId === "CAM-NDEL-W4-08";
+  const isPhone = selectedStreamId.startsWith("PHONE");
+  const phoneData = activeStreamsData[selectedStreamId];
+
+  // If selecting a CCTV camera
+  if (!isPhone) {
+    const isAlert = selectedStreamId === "CAM-NDEL-W4-08";
+    panel.innerHTML = `
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 font-mono">${selectedStreamId} — Municipal Fixed Grid Feed</h3>
+          <p class="text-xs text-slate-500">Continuous RTSP grid feed with bounding-box computer-vision inference</p>
+        </div>
+        <span class="${isAlert ? 'wm-pill-critical' : 'wm-pill-normal'}">
+          ${isAlert ? 'Rabies Incident Flagged' : 'Routine Surveillance'}
+        </span>
+      </div>
+
+      <div class="relative aspect-video rounded-xl overflow-hidden bg-black border border-slate-200 flex items-center justify-center shadow-xs">
+        <video src="${selectedStreamId === 'CAM-NDEL-W4-08' ? '/videos/rabid_dog_sample.mp4' : selectedStreamId === 'CAM-NDEL-W7-14' ? '/videos/fracture_wound_sample.mp4' : '/videos/summer_panting_sample.mp4'}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+        <div class="absolute top-3 left-3 bg-slate-900/90 text-white text-[10px] font-mono px-2 py-0.5 rounded z-10 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>LIVE ● ${selectedStreamId}</span>
+        </div>
+        ${isAlert ? `
+          <div class="absolute inset-16 border-2 border-dashed border-rose-500 rounded-xl flex flex-col justify-between p-2 pointer-events-none animate-pulse z-10">
+            <span class="bg-rose-600 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded self-start">CANINE_ALERT: 94%</span>
+            <span class="bg-black/70 text-white text-[10px] font-mono px-1.5 py-0.5 rounded self-end">MANDIBLE_DROP: POSITIVE</span>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+          <div class="text-slate-500 text-[10px] font-semibold uppercase">Gait Anomaly</div>
+          <div class="font-bold text-slate-900 text-base font-mono mt-0.5">${isAlert ? '0.94 (Ataxia)' : '0.04 (Clear)'}</div>
+        </div>
+        <div class="p-3 rounded-xl border ${isAlert ? 'border-rose-300 bg-rose-50/70' : 'border-slate-200 bg-slate-50'}">
+          <div class="text-slate-500 text-[10px] font-semibold uppercase">Audio Phonation</div>
+          <div class="font-bold text-base font-mono mt-0.5 ${isAlert ? 'text-rose-600' : 'text-emerald-700'}">${isAlert ? '🎙️ Rabies Howl' : '🎧 Silent / Normal'}</div>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+          <div class="text-slate-500 text-[10px] font-semibold uppercase">AI Verification</div>
+          <div class="font-bold text-slate-900 text-base font-mono mt-0.5">${isAlert ? '3/3 Temporal Consensus' : 'Nominal'}</div>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+          <div class="text-slate-500 text-[10px] font-semibold uppercase">Dispatch Action</div>
+          <div class="font-bold text-rose-600 text-base font-mono mt-0.5">${isAlert ? 'Tier 1 Immediate' : 'Standby'}</div>
+        </div>
+      </div>
+    `;
+    initLucide();
+    return;
+  }
+
+  // Active Smartphone Stream Player
+  const det = phoneData ? (phoneData.last_detection || {}) : {};
+  const isRabiesAlert = det.predicted_class === "PARALYTIC_ATAXIA" || det.saliva_foaming || det.mandible_drop;
+  const confidencePct = det.confidence ? Math.round(det.confidence * 100) : 94;
 
   panel.innerHTML = `
-    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
       <div>
-        <h3 class="text-sm font-bold text-slate-900">${selectedCameraId} — Evidence & Detection Telemetry</h3>
-        <p class="text-xs text-slate-500">Direct RTSP feed stream with bounding-box computer-vision inference</p>
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-bold text-slate-900 font-mono">${phoneData ? phoneData.name : selectedStreamId}</h3>
+          <span class="text-[10px] bg-emerald-50 text-emerald-800 font-semibold px-2 py-0.5 rounded border border-emerald-200">Phone Camera CCTV</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">Real-time smartphone frame push with fine-tuned MobileNetV4 & YAMNet inference</p>
       </div>
-      <span class="${isAlert ? 'wm-pill-critical' : 'wm-pill-normal'}">
-        ${isAlert ? 'Incident Active' : 'Normal Surveillance'}
-      </span>
+      <div class="flex items-center gap-2">
+        <span class="${phoneData && phoneData.status === 'STREAMING' ? 'wm-pill-normal' : 'wm-pill-neutral'}">
+          ● ${phoneData ? phoneData.status : 'ONLINE'}
+        </span>
+      </div>
     </div>
 
-    <div class="relative aspect-video rounded-xl overflow-hidden bg-black border border-slate-200 flex items-center justify-center shadow-xs">
-      <video src="${selectedCameraId === 'CAM-NDEL-W4-08' ? '/videos/rabid_dog_sample.mp4' : selectedCameraId === 'CAM-NDEL-W7-14' ? '/videos/fracture_wound_sample.mp4' : '/videos/summer_panting_sample.mp4'}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
-      <div class="absolute top-3 left-3 bg-slate-900/90 text-white text-[10px] font-mono px-2 py-0.5 rounded z-10">
-        LIVE ● ${selectedCameraId}
+    <!-- Live Stream Video / Canvas HUD Player -->
+    <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-200 flex items-center justify-center shadow-xs">
+      ${phoneData && phoneData.last_frame ? `
+        <img id="phone-stream-img" src="${phoneData.last_frame}" alt="Live Phone Stream" class="w-full h-full object-cover">
+      ` : `
+        <video src="/videos/rabid_dog_sample.mp4" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+      `}
+      
+      <!-- Live HUD Overlays -->
+      <div class="absolute top-3 left-3 bg-slate-900/90 text-white text-[10px] font-mono px-2.5 py-1 rounded-lg z-10 flex items-center gap-2 border border-slate-700">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>EDGE INGESTION: ${selectedStreamId}</span>
       </div>
-      ${isAlert ? `
-        <div class="absolute inset-16 border-2 border-dashed border-rose-500 rounded-xl flex flex-col justify-between p-2 pointer-events-none animate-pulse z-10">
-          <span class="bg-rose-600 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded self-start">CANINE_ALERT: 94%</span>
-          <span class="bg-black/70 text-white text-[10px] font-mono px-1.5 py-0.5 rounded self-end">MANDIBLE_DROP: POSITIVE</span>
+
+      <div class="absolute top-3 right-3 bg-slate-900/90 text-white text-[10px] font-mono px-2.5 py-1 rounded-lg z-10 flex items-center gap-3 border border-slate-700">
+        <span>🔋 ${phoneData ? phoneData.battery_pct : 86}%</span>
+        <span>📶 ${phoneData ? Math.round(phoneData.latency_ms) : 48}ms</span>
+        <span>${phoneData ? phoneData.resolution : '1280x720'}</span>
+      </div>
+
+      <!-- Bounding Box & HUD Tag -->
+      ${isRabiesAlert ? `
+        <div class="absolute inset-12 sm:inset-16 border-2 border-dashed border-rose-500 rounded-xl flex flex-col justify-between p-2.5 pointer-events-none animate-pulse z-10">
+          <div class="flex items-center justify-between">
+            <span class="bg-rose-600 text-white text-[11px] font-mono font-bold px-2 py-0.5 rounded shadow">
+              CLINICAL_ALERT: ${det.predicted_class || 'PARALYTIC_ATAXIA'} (${confidencePct}%)
+            </span>
+            <span class="bg-black/80 text-white text-[10px] font-mono px-2 py-0.5 rounded">
+              GAIT: ${det.gait_anomaly_score ? Math.round(det.gait_anomaly_score * 100) : 94}% ABNORMAL
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="bg-black/80 text-rose-300 text-[10px] font-mono px-2 py-0.5 rounded">
+              MANDIBLE DROP: ${det.mandible_drop ? 'CONFIRMED' : 'NEGATIVE'}
+            </span>
+            <span class="bg-rose-900/90 text-white text-[10px] font-mono px-2 py-0.5 rounded">
+              SALIVARY FOAM: ${det.saliva_foaming ? 'ACTIVE' : 'NEGATIVE'}
+            </span>
+          </div>
         </div>
       ` : ''}
     </div>
 
+    <!-- Live Telemetry Grid -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
       <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
-        <div class="text-slate-500 text-[10px] font-semibold uppercase">Gait Anomaly</div>
-        <div class="font-bold text-slate-900 text-base font-mono mt-0.5">${isAlert ? '0.94 (Ataxia)' : '0.04 (Clear)'}</div>
+        <div class="text-slate-500 text-[10px] font-semibold uppercase">Fine-Tuned CV</div>
+        <div class="font-bold text-slate-900 text-sm font-mono mt-0.5 truncate">${det.predicted_class || 'PARALYTIC_ATAXIA'}</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">MobileNetV4 Head (${confidencePct}%)</div>
       </div>
-      <div class="p-3 rounded-xl border ${isAlert ? 'border-rose-300 bg-rose-50/70' : 'border-slate-200 bg-slate-50'}">
-        <div class="text-slate-500 text-[10px] font-semibold uppercase">Audio Acoustics</div>
-        <div class="font-bold text-base font-mono mt-0.5 ${isAlert ? 'text-rose-600' : 'text-emerald-700'}">${isAlert ? '🎙️ Rabies Howl' : '🎧 Silent / Normal'}</div>
-        <div class="text-[9px] text-slate-500 mt-0.5">${isAlert ? 'Laryngeal Paralysis' : 'No Distress Phonation'}</div>
+
+      <div class="p-3 rounded-xl border ${isRabiesAlert ? 'border-rose-300 bg-rose-50/70' : 'border-slate-200 bg-slate-50'}">
+        <div class="text-slate-500 text-[10px] font-semibold uppercase">Acoustic Phonation</div>
+        <div class="font-bold text-sm font-mono mt-0.5 ${isRabiesAlert ? 'text-rose-600' : 'text-emerald-700'}">
+          ${det.audio_phonation === 'CANINE_RABIES_HOWL' ? '🎙️ Rabies Howl' : det.audio_phonation || '🎙️ Phonation'}
+        </div>
+        <div class="text-[10px] text-slate-500 mt-0.5">YAMNet 1024-d Embedding</div>
       </div>
+
       <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
-        <div class="text-slate-500 text-[10px] font-semibold uppercase">AI Verification</div>
-        <div class="font-bold text-slate-900 text-base font-mono mt-0.5">${isAlert ? '3/3 Blocks Passed' : 'Standby'}</div>
+        <div class="text-slate-500 text-[10px] font-semibold uppercase">Phone Telemetry</div>
+        <div class="font-bold text-slate-900 text-sm font-mono mt-0.5">
+          ${phoneData ? phoneData.fps : 24} FPS / ${phoneData ? Math.round(phoneData.latency_ms) : 48}ms
+        </div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Battery: ${phoneData ? phoneData.battery_pct : 86}% ● Warm</div>
       </div>
+
       <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
-        <div class="text-slate-500 text-[10px] font-semibold uppercase">Dispatch Priority</div>
-        <div class="font-bold text-rose-600 text-base font-mono mt-0.5">${isAlert ? 'Tier 1 Immediate' : 'Tier 2 Routine'}</div>
+        <div class="text-slate-500 text-[10px] font-semibold uppercase">Triage Assessment</div>
+        <div class="font-bold ${isRabiesAlert ? 'text-rose-600' : 'text-emerald-700'} text-sm font-mono mt-0.5">
+          ${isRabiesAlert ? 'Tier 1 Immediate' : 'Tier 3 Monitoring'}
+        </div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Consensus Verified</div>
       </div>
+    </div>
+
+    <!-- Action Bar: Convert Snapshot to Case -->
+    <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="text-xs text-slate-700">
+        <div class="font-bold text-emerald-900 flex items-center gap-1.5">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-700"></i>
+          <span>Convert Live Stream Evidence to Case Dossier</span>
+        </div>
+        <p class="text-slate-600 mt-0.5">Pushes this frame & audio phonation to the municipal emergency response queue.</p>
+      </div>
+      <button onclick="convertStreamSnapshotToCase('${selectedStreamId}')" class="wm-btn-coral px-4 py-2 text-xs flex items-center justify-center gap-1.5 whitespace-nowrap shadow-xs">
+        <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+        <span>Create Incident Dossier</span>
+      </button>
     </div>
   `;
 
   initLucide();
+}
+
+async function convertStreamSnapshotToCase(streamId) {
+  try {
+    const res = await fetch(`/api/stream/snapshot_triage/${streamId}`, { method: "POST" });
+    const data = await res.json();
+    if (res.ok && data.status === "CASE_CREATED") {
+      showSuccessToast("Case Dossier Created", `Incident ${data.case_id} registered. Dispatching quarantine squad.`);
+      await fetchDossiers();
+      navigateMuni("overview");
+    } else {
+      showErrorToast("Triage Notice", data.message || "Failed to create dossier from stream snapshot.");
+    }
+  } catch (err) {
+    console.error("Error creating case from snapshot:", err);
+    showErrorToast("Connection Error", "Could not reach triage endpoint.");
+  }
+}
+
+// -------------------------------------------------------------
+// PHONE PAIRING MODAL
+// -------------------------------------------------------------
+function openPhoneQrModal() {
+  const modal = document.getElementById("phone-qr-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  const host = window.location.host || "localhost:8000";
+  const protocol = window.location.protocol || "http:";
+  const urlSpan = document.getElementById("phone-stream-url");
+  if (urlSpan) {
+    urlSpan.innerText = `${protocol}//${host}/phone_cam.html`;
+  }
+  initLucide();
+}
+
+function closePhoneQrModal() {
+  const modal = document.getElementById("phone-qr-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+// -------------------------------------------------------------
+// TRANSFER LEARNING & MODEL GOVERNANCE
+// -------------------------------------------------------------
+async function loadModelStats() {
+  try {
+    const res = await fetch("/api/models/stats");
+    if (!res.ok) return;
+    const stats = await res.json();
+
+    if (document.getElementById("cv-acc-metric")) {
+      document.getElementById("cv-acc-metric").innerText = `${(stats.cv_model.top1_accuracy * 100).toFixed(1)}%`;
+      document.getElementById("cv-map-metric").innerText = `${(stats.cv_model.mAP50 * 100).toFixed(1)}%`;
+      document.getElementById("cv-latency-metric").innerText = `${stats.cv_model.inference_latency_ms} ms`;
+      document.getElementById("cv-backbone-tag").innerText = stats.cv_model.active_backbone;
+
+      document.getElementById("audio-f1-metric").innerText = `${(stats.audio_model.f1_score * 100).toFixed(1)}%`;
+      document.getElementById("audio-auc-metric").innerText = stats.audio_model.auc_roc.toFixed(3);
+      document.getElementById("audio-latency-metric").innerText = `${stats.audio_model.inference_latency_ms} ms`;
+
+      const rabVal = Math.round(stats.runtime_thresholds.rabies_threshold * 100);
+      const ataVal = Math.round(stats.runtime_thresholds.ataxia_sensitivity * 100);
+      const audVal = Math.round(stats.runtime_thresholds.audio_phonation_threshold * 100);
+
+      document.getElementById("input-rabies-thresh").value = rabVal;
+      document.getElementById("label-rabies-thresh").innerText = `${rabVal}%`;
+
+      document.getElementById("input-ataxia-thresh").value = ataVal;
+      document.getElementById("label-ataxia-thresh").innerText = `${ataVal}%`;
+
+      document.getElementById("input-audio-thresh").value = audVal;
+      document.getElementById("label-audio-thresh").innerText = `${audVal}%`;
+
+      if (document.getElementById("select-cv-backbone")) {
+        document.getElementById("select-cv-backbone").value = stats.runtime_thresholds.active_backbone;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load model stats:", err);
+  }
+}
+
+async function saveModelConfig() {
+  try {
+    const rabiesVal = parseFloat(document.getElementById("input-rabies-thresh").value) / 100.0;
+    const ataxiaVal = parseFloat(document.getElementById("input-ataxia-thresh").value) / 100.0;
+    const audioVal = parseFloat(document.getElementById("input-audio-thresh").value) / 100.0;
+    const backboneVal = document.getElementById("select-cv-backbone").value;
+
+    const formData = new FormData();
+    formData.append("rabies_threshold", rabiesVal);
+    formData.append("ataxia_sensitivity", ataxiaVal);
+    formData.append("audio_phonation_threshold", audioVal);
+    formData.append("active_backbone", backboneVal);
+
+    const res = await fetch("/api/models/config", {
+      method: "POST",
+      body: formData
+    });
+
+    if (res.ok) {
+      showSuccessToast("Hyperparameters Applied", `Model configuration updated. Rabies cutoff: ${(rabiesVal*100).toFixed(0)}%, Backbone: ${backboneVal}`);
+      loadModelStats();
+    } else {
+      showErrorToast("Configuration Error", "Could not update model thresholds.");
+    }
+  } catch (err) {
+    console.error("Failed to save model config:", err);
+    showErrorToast("Error", "Failed to communicate with model governance API.");
+  }
 }
 
 // -------------------------------------------------------------

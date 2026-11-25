@@ -61,6 +61,11 @@
         <span class="hidden sm:inline">My GPS</span>
       </button>
 
+      <button onclick="openPhoneQrModal()" title="Connect Smartphone Camera as Surveillance Node" class="wm-btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
+        <i data-lucide="smartphone" class="w-3.5 h-3.5 text-emerald-600"></i>
+        <span class="hidden sm:inline">Pair Phone Cam</span>
+      </button>
+
       <button onclick="resetDemoData()" title="Reset demo state" class="wm-btn-secondary p-2">
         <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-600"></i>
       </button>
@@ -114,7 +119,13 @@
 
       <button onclick="navigateMuni('cameras')" id="muni-nav-cameras" class="wm-nav-item w-full">
         <i data-lucide="video" class="w-4 h-4 text-slate-500"></i>
-        <span>CCTV Surveillance</span>
+        <span>Live Video & Phone Nodes</span>
+        <span class="ml-auto w-2 h-2 rounded-full bg-emerald-500 stream-live-pulse" title="Active Streams Available"></span>
+      </button>
+
+      <button onclick="navigateMuni('models')" id="muni-nav-models" class="wm-nav-item w-full">
+        <i data-lucide="cpu" class="w-4 h-4 text-slate-500"></i>
+        <span>Transfer Learning & Models</span>
       </button>
 
       <button onclick="navigateMuni('map')" id="muni-nav-map" class="wm-nav-item w-full">
@@ -303,39 +314,107 @@
           </div>
         </section>
 
-        <!-- Muni CCTV Review -->
+        <!-- Muni CCTV & Smartphone Nodes Review -->
         <section id="muni-page-cameras" class="muni-content hidden wm-page-enter space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+            <div>
+              <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="video" class="w-5 h-5 text-emerald-700"></i>
+                <span>Live Video Ingestion & Phone Camera Grid</span>
+              </h2>
+              <p class="text-xs text-slate-500">Deploy any smartphone as an AI edge CCTV node or monitor municipal camera feeds.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openPhoneQrModal()" class="wm-btn-primary px-3 py-1.5 text-xs flex items-center gap-1.5 shadow-xs">
+                <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                <span>+ Pair Phone as CCTV</span>
+              </button>
+              <button onclick="refreshStreamsList()" class="wm-btn-secondary px-2.5 py-1.5 text-xs text-slate-600 hover:text-slate-900" title="Refresh Live Feeds">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
           <div class="grid grid-cols-12 gap-6">
-            <div class="col-span-12 lg:col-span-4 flex flex-col gap-3">
-              <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">CCTV Grid Feeds</div>
-
-              <div onclick="selectCamera('CAM-NDEL-W4-08')" class="wm-card bg-white p-4 cursor-pointer hover:border-slate-400 border-l-4 border-l-rose-500 transition">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-900 font-mono">CAM-NDEL-W4-08</span>
-                  <span class="wm-pill-critical text-[10px]">Rabies Alert</span>
+            <!-- Left Feeds Column -->
+            <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+              <!-- Smartphone Feeds -->
+              <div>
+                <div class="flex items-center justify-between px-1 mb-2">
+                  <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="smartphone" class="w-3.5 h-3.5 text-emerald-600"></i> Smartphone Edge Nodes
+                  </span>
+                  <span id="phone-nodes-count" class="text-[10px] bg-emerald-50 text-emerald-700 font-mono font-semibold px-2 py-0.5 rounded-full border border-emerald-200">2 Active</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-1">Ward 4 North Ring Road</p>
+                <div id="smartphone-nodes-container" class="space-y-2">
+                  <!-- Dynamically populated or fallback -->
+                  <div onclick="selectStreamSource('PHONE-CAM-01')" id="stream-card-PHONE-CAM-01" class="wm-card bg-white p-3.5 cursor-pointer hover:border-emerald-500 border-l-4 border-l-rose-500 transition shadow-2xs">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-slate-900 font-mono">PHONE-CAM-01</span>
+                      <span class="wm-pill-critical text-[10px]">Rabies Alert (94%)</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Field Phone Node #1 (Pixel 8)</p>
+                    <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-mono">
+                      <span>🔋 86%</span>
+                      <span>📶 48ms</span>
+                      <span>📹 720p @ 24fps</span>
+                    </div>
+                  </div>
+
+                  <div onclick="selectStreamSource('PHONE-CAM-02')" id="stream-card-PHONE-CAM-02" class="wm-card bg-white p-3.5 cursor-pointer hover:border-emerald-500 border-l-4 border-l-slate-300 transition shadow-2xs">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-slate-900 font-mono">PHONE-CAM-02</span>
+                      <span class="wm-pill-neutral text-[10px]">Standby</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Patrol Officer Phone #2 (iPhone 15)</p>
+                    <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-mono">
+                      <span>🔋 64%</span>
+                      <span>📶 36ms</span>
+                      <span>📹 720p</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div onclick="selectCamera('CAM-NDEL-W7-14')" class="wm-card bg-white p-4 cursor-pointer hover:border-slate-400 border-l-4 border-l-emerald-600 transition">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-900 font-mono">CAM-NDEL-W7-14</span>
-                  <span class="wm-pill-normal text-[10px]">Monitoring</span>
+              <!-- Municipal CCTV Grids -->
+              <div>
+                <div class="flex items-center justify-between px-1 mb-2">
+                  <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="video" class="w-3.5 h-3.5 text-slate-500"></i> Fixed Municipal CCTV
+                  </span>
+                  <span class="text-[10px] bg-slate-100 text-slate-600 font-mono px-2 py-0.5 rounded-full">3 Feeds</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-1">Civic Market Alleyway</p>
-              </div>
+                <div class="space-y-2">
+                  <div onclick="selectStreamSource('CAM-NDEL-W4-08')" id="stream-card-CAM-NDEL-W4-08" class="wm-card bg-white p-3.5 cursor-pointer hover:border-slate-400 border-l-4 border-l-rose-500 transition shadow-2xs">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-slate-900 font-mono">CAM-NDEL-W4-08</span>
+                      <span class="wm-pill-critical text-[10px]">Ataxia Alert</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Ward 4 North Ring Road</p>
+                  </div>
 
-              <div onclick="selectCamera('CAM-SOUTH-02')" class="wm-card bg-white p-4 cursor-pointer hover:border-slate-400 border-l-4 border-l-slate-300 transition">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-900 font-mono">CAM-SOUTH-02</span>
-                  <span class="wm-pill-neutral text-[10px]">Clear</span>
+                  <div onclick="selectStreamSource('CAM-NDEL-W7-14')" id="stream-card-CAM-NDEL-W7-14" class="wm-card bg-white p-3.5 cursor-pointer hover:border-slate-400 border-l-4 border-l-emerald-600 transition shadow-2xs">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-slate-900 font-mono">CAM-NDEL-W7-14</span>
+                      <span class="wm-pill-normal text-[10px]">Monitoring</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Civic Market Alleyway</p>
+                  </div>
+
+                  <div onclick="selectStreamSource('CAM-SOUTH-02')" id="stream-card-CAM-SOUTH-02" class="wm-card bg-white p-3.5 cursor-pointer hover:border-slate-400 border-l-4 border-l-slate-300 transition shadow-2xs">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-slate-900 font-mono">CAM-SOUTH-02</span>
+                      <span class="wm-pill-neutral text-[10px]">Clear</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Sector 9 Community Park</p>
+                  </div>
                 </div>
-                <p class="text-xs text-slate-500 mt-1">Sector 9 Community Park</p>
               </div>
             </div>
 
+            <!-- Right Detail Player Column -->
             <div class="col-span-12 lg:col-span-8 flex flex-col">
-              <div id="muni-camera-review-detail" class="wm-card bg-white p-5 space-y-4"></div>
+              <div id="muni-camera-review-detail" class="wm-card bg-white p-5 space-y-4 shadow-xs"></div>
             </div>
           </div>
         </section>
@@ -418,7 +497,180 @@
           </div>
         </section>
 
-        <!-- Muni Analytics -->
+        <!-- Muni Transfer Learning & Fine-Tuned Models Governance -->
+        <section id="muni-page-models" class="muni-content hidden wm-page-enter space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+            <div>
+              <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="cpu" class="w-5 h-5 text-emerald-700"></i>
+                <span>Transfer Learning & Clinical Model Governance</span>
+              </h2>
+              <p class="text-xs text-slate-500">Domain-fine-tuned MobileNetV4 / YOLOv8 & YAMNet models for sub-20ms edge inference.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="wm-pill-normal text-xs px-2.5 py-1 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Edge Inference Active (CPU: ~14ms)
+              </span>
+            </div>
+          </div>
+
+          <!-- Model Architecture Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- CV Model Card -->
+            <div class="wm-card bg-white p-5 space-y-4 border-t-4 border-t-emerald-600 shadow-xs">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="scan" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Computer Vision: Canine Gait & Pathology</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-500 font-mono mt-0.5" id="cv-backbone-tag">timm/mobilenetv4_large.e600_r224_in1k (Fine-Tuned Head)</p>
+                </div>
+                <span class="wm-pill-normal text-[10px]">CV Head</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div class="text-[10px] text-slate-500 font-semibold uppercase">Top-1 Acc</div>
+                  <div class="font-bold text-slate-900 font-mono text-sm mt-0.5" id="cv-acc-metric">94.8%</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div class="text-[10px] text-slate-500 font-semibold uppercase">mAP50</div>
+                  <div class="font-bold text-slate-900 font-mono text-sm mt-0.5" id="cv-map-metric">93.2%</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div class="text-[10px] text-slate-500 font-semibold uppercase">Edge Latency</div>
+                  <div class="font-bold text-emerald-700 font-mono text-sm mt-0.5" id="cv-latency-metric">14.2 ms</div>
+                </div>
+              </div>
+
+              <div class="text-[11px] space-y-1.5 border-t border-slate-100 pt-3">
+                <div class="font-semibold text-slate-700">Trained Pathology Classes:</div>
+                <div class="flex flex-wrap gap-1.5 font-mono text-[10px]">
+                  <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 border border-slate-200">NORMAL_CANINE</span>
+                  <span class="px-2 py-0.5 bg-amber-50 text-amber-800 rounded border border-amber-200">ORTHOPEDIC_FRACTURE</span>
+                  <span class="px-2 py-0.5 bg-rose-50 text-rose-800 rounded border border-rose-200">PARALYTIC_ATAXIA</span>
+                  <span class="px-2 py-0.5 bg-rose-50 text-rose-800 rounded border border-rose-200">MANDIBULAR_SALIVARY_DROP</span>
+                  <span class="px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded border border-emerald-200">PANTING_REST</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audio Model Card -->
+            <div class="wm-card bg-white p-5 space-y-4 border-t-4 border-t-teal-600 shadow-xs">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="mic" class="w-4 h-4 text-teal-600"></i>
+                    <span>Audio Phonation: Laryngeal Distress Triage</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-500 font-mono mt-0.5">tensorflow/yamnet 1024-d AudioSet + 2-Layer MLP</p>
+                </div>
+                <span class="wm-pill-normal text-[10px]">Audio Head</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div class="text-[10px] text-slate-500 font-semibold uppercase">F1-Score</div>
+                  <div class="font-bold text-slate-900 font-mono text-sm mt-0.5" id="audio-f1-metric">95.8%</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div class="text-[10px] text-slate-500 font-semibold uppercase">AUC-ROC</div>
+                  <div class="font-bold text-slate-900 font-mono text-sm mt-0.5" id="audio-auc-metric">0.984</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div class="text-[10px] text-slate-500 font-semibold uppercase">Edge Latency</div>
+                  <div class="font-bold text-teal-700 font-mono text-sm mt-0.5" id="audio-latency-metric">7.8 ms</div>
+                </div>
+              </div>
+
+              <div class="text-[11px] space-y-1.5 border-t border-slate-100 pt-3">
+                <div class="font-semibold text-slate-700">Trained Phonation Classes:</div>
+                <div class="flex flex-wrap gap-1.5 font-mono text-[10px]">
+                  <span class="px-2 py-0.5 bg-rose-50 text-rose-800 rounded border border-rose-200">CANINE_RABIES_HOWL</span>
+                  <span class="px-2 py-0.5 bg-amber-50 text-amber-800 rounded border border-amber-200">ACUTE_PAIN_WHINE</span>
+                  <span class="px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded border border-emerald-200">NORMAL_PANTING</span>
+                  <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 border border-slate-200">TERRITORIAL_BARK</span>
+                  <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-500 border border-slate-200">AMBIENT_NOISE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Runtime Threshold Controls -->
+          <div class="wm-card bg-white p-6 space-y-5 shadow-xs">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <i data-lucide="sliders" class="w-4 h-4 text-slate-700"></i>
+                  <span>Live Model Sensitivity & Hyperparameter Thresholds</span>
+                </h3>
+                <p class="text-xs text-slate-500">Fine-tune decision boundaries in real time without retraining or restarting server.</p>
+              </div>
+              <button onclick="saveModelConfig()" class="wm-btn-primary px-4 py-2 text-xs flex items-center gap-1.5 shadow-xs">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <span>Apply Hyperparameters</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Threshold 1: Rabies Consensus -->
+              <div class="space-y-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="flex items-center justify-between text-xs">
+                  <label class="font-semibold text-slate-800">Rabies Decision Cutoff</label>
+                  <span id="label-rabies-thresh" class="font-mono font-bold text-rose-600 bg-white px-2 py-0.5 rounded border border-slate-200">85%</span>
+                </div>
+                <input type="range" id="input-rabies-thresh" min="50" max="98" value="85" step="1" 
+                  oninput="document.getElementById('label-rabies-thresh').innerText = this.value + '%'" 
+                  class="w-full accent-emerald-700 cursor-pointer">
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                  Minimum consensus confidence across temporal frames required to trigger red geofence containment alerts.
+                </p>
+              </div>
+
+              <!-- Threshold 2: Ataxia Sensitivity -->
+              <div class="space-y-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="flex items-center justify-between text-xs">
+                  <label class="font-semibold text-slate-800">Gait Ataxia Sensitivity</label>
+                  <span id="label-ataxia-thresh" class="font-mono font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-slate-200">75%</span>
+                </div>
+                <input type="range" id="input-ataxia-thresh" min="40" max="95" value="75" step="1" 
+                  oninput="document.getElementById('label-ataxia-thresh').innerText = this.value + '%'" 
+                  class="w-full accent-emerald-700 cursor-pointer">
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                  Sensitivity threshold for flagging pelvic limb ataxia, drunk stagger, and abnormal spinal curvature.
+                </p>
+              </div>
+
+              <!-- Threshold 3: Audio Phonation Threshold -->
+              <div class="space-y-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="flex items-center justify-between text-xs">
+                  <label class="font-semibold text-slate-800">Audio Phonation Cutoff</label>
+                  <span id="label-audio-thresh" class="font-mono font-bold text-teal-800 bg-white px-2 py-0.5 rounded border border-slate-200">70%</span>
+                </div>
+                <input type="range" id="input-audio-thresh" min="40" max="95" value="70" step="1" 
+                  oninput="document.getElementById('label-audio-thresh').innerText = this.value + '%'" 
+                  class="w-full accent-emerald-700 cursor-pointer">
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                  Acoustic probability threshold for classifying hoarse rabies howl vs acute pain whine in YAMNet embeddings.
+                </p>
+              </div>
+            </div>
+
+            <!-- Active Backbone Selector -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-200">
+              <div class="text-xs text-slate-600">
+                <b>Active Vision Backbone Architecture:</b>
+              </div>
+              <div class="flex items-center gap-3">
+                <select id="select-cv-backbone" class="text-xs px-3 py-2 rounded-lg border border-slate-300 font-mono text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-700">
+                  <option value="mobilenet_v4_large" selected>MobileNetV4-Large (Fine-Tuned — 4.2M params, 14.2ms)</option>
+                  <option value="yolov8n_cls">YOLOv8n-Classify (Fine-Tuned — 3.1M params, 11.8ms)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
         <section id="muni-page-analytics" class="muni-content hidden wm-page-enter space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="wm-card bg-white p-5">
@@ -684,6 +936,67 @@
         <div class="flex items-center gap-2">
           <button onclick="testGeminiKeyLive()" class="wm-btn-secondary px-3 py-1.5 text-xs">Test</button>
           <button onclick="saveGeminiKey()" class="wm-btn-primary px-4 py-1.5 text-xs">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watermelon Modal: Phone Camera Pairing -->
+  <div id="phone-qr-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 transition-all duration-200">
+    <div class="wm-modal bg-white max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="smartphone" class="w-4 h-4 text-emerald-700"></i>
+          <span>Pair Smartphone as Live CCTV Node</span>
+        </h3>
+        <button onclick="closePhoneQrModal()" class="text-slate-400 hover:text-slate-700">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Turn any mobile phone into an autonomous smart CCTV node without downloading an app. The camera feed streams directly into IndiePulse for real-time canine gait & acoustic triage.
+      </p>
+
+      <!-- 3-Step Setup Instructions -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
+          <div class="text-xs text-slate-700">
+            <b>Open Mobile Streamer:</b> On your smartphone, open your browser and navigate to:
+            <div class="mt-1 p-2 bg-white rounded border border-slate-200 font-mono text-[11px] text-emerald-800 break-all select-all flex items-center justify-between">
+              <span id="phone-stream-url">http://localhost:8000/phone_cam.html</span>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('phone-stream-url').innerText); showSuccessToast('Copied URL', 'Stream URL copied to clipboard');" class="text-slate-400 hover:text-emerald-700 ml-2" title="Copy URL">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
+          <div class="text-xs text-slate-700">
+            <b>Allow Permissions:</b> Grant camera & microphone access. Switch to <b>Back Camera</b> for optimal field surveillance.
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
+          <div class="text-xs text-slate-700">
+            <b>Start Streaming:</b> Tap <b>Start Live Ingestion</b>. The feed and live AI detection will automatically register in the municipality CCTV grid!
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Launch Action -->
+      <div class="flex items-center justify-between pt-2">
+        <span class="text-[11px] text-slate-500 font-mono">Zero app install required</span>
+        <div class="flex items-center gap-2">
+          <button onclick="closePhoneQrModal()" class="wm-btn-secondary px-3 py-1.5 text-xs">Close</button>
+          <a href="/phone_cam.html" target="_blank" class="wm-btn-primary px-4 py-1.5 text-xs flex items-center gap-1.5 inline-flex">
+            <span>Launch Phone Cam Node</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
         </div>
       </div>
     </div>

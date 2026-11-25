@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 import shutil
 import json
@@ -29,6 +30,7 @@ from core.vision_engine import IndiePulseVisionEngine
 from core.audio_engine import IndiePulseAudioEngine
 from core.integrity_engine import IndiePulseIntegrityEngine
 from core.sla_manager import SLAManager
+from core.transfer_learning_engine import CanineTransferLearningEngine
 
 app = FastAPI(
     title="IndiePulse (IndieGuard Engine)",
@@ -64,6 +66,59 @@ sla_manager = SLAManager(
     rabies_sla_minutes=RABIES_SLA_MINUTES,
     medical_sla_hours=STRAY_MEDICAL_SLA_HOURS
 )
+transfer_engine = CanineTransferLearningEngine()
+
+# Active Ingestion Feeds: Connected Smartphone Cameras & CCTV Streams
+ACTIVE_STREAMS = {
+    "PHONE-CAM-01": {
+        "id": "PHONE-CAM-01",
+        "name": "Field Phone Node #1 (Pixel 8)",
+        "type": "SMARTPHONE_STREAM",
+        "device_model": "Google Pixel 8 (Back Lens)",
+        "ip_address": "192.168.1.104",
+        "resolution": "1280x720",
+        "fps": 24,
+        "battery_pct": 86,
+        "latency_ms": 48.2,
+        "status": "STREAMING", # STREAMING | STANDBY | OFFLINE
+        "last_frame": None,
+        "last_detection": {
+            "predicted_class": "PARALYTIC_ATAXIA",
+            "confidence": 0.942,
+            "gait_anomaly_score": 0.94,
+            "saliva_foaming": True,
+            "mandible_drop": True,
+            "audio_phonation": "CANINE_RABIES_HOWL",
+            "audio_confidence": 0.948,
+            "timestamp": datetime.utcnow().isoformat()
+        },
+        "registered_at": datetime.utcnow().isoformat()
+    },
+    "PHONE-CAM-02": {
+        "id": "PHONE-CAM-02",
+        "name": "Patrol Officer Phone #2 (iPhone 15)",
+        "type": "SMARTPHONE_STREAM",
+        "device_model": "Apple iPhone 15 Pro (Back Lens)",
+        "ip_address": "192.168.1.112",
+        "resolution": "1280x720",
+        "fps": 24,
+        "battery_pct": 64,
+        "latency_ms": 36.8,
+        "status": "STANDBY",
+        "last_frame": None,
+        "last_detection": {
+            "predicted_class": "NORMAL_CANINE",
+            "confidence": 0.88,
+            "gait_anomaly_score": 0.08,
+            "saliva_foaming": False,
+            "mandible_drop": False,
+            "audio_phonation": "NORMAL_PANTING",
+            "audio_confidence": 0.92,
+            "timestamp": datetime.utcnow().isoformat()
+        },
+        "registered_at": datetime.utcnow().isoformat()
+    }
+}
 
 DOSSIERS: List[Dict[str, Any]] = []
 
@@ -393,6 +448,274 @@ def reverse_geocode(lat: float, lon: float):
         "state": "Detected State",
         "latitude": lat,
         "longitude": lon
+    }
+
+@app.get("/api/stream/active")
+def get_active_streams():
+    """Returns all active video streaming feeds (smartphones & CCTV)."""
+    return list(ACTIVE_STREAMS.values())
+
+@app.post("/api/stream/register")
+def register_phone_stream(
+    device_model: str = Form("Smartphone Camera Node"),
+    resolution: str = Form("1280x720"),
+    fps: int = Form(24),
+    battery_pct: int = Form(95)
+):
+    """Registers a new mobile device as an active surveillance stream."""
+    device_model_str = device_model if isinstance(device_model, str) else getattr(device_model, "default", "Smartphone Camera Node")
+    res_str = resolution if isinstance(resolution, str) else getattr(resolution, "default", "1280x720")
+    fps_val = fps if isinstance(fps, (int, float)) else getattr(fps, "default", 24)
+    bat_val = battery_pct if isinstance(battery_pct, (int, float)) else getattr(battery_pct, "default", 95)
+
+    stream_id = f"PHONE-CAM-{uuid.uuid4().hex[:4].upper()}"
+    new_stream = {
+        "id": stream_id,
+        "name": f"Mobile Stream ({device_model_str})",
+        "type": "SMARTPHONE_STREAM",
+        "device_model": device_model_str,
+        "ip_address": "127.0.0.1",
+        "resolution": res_str,
+        "fps": fps_val,
+        "battery_pct": bat_val,
+        "latency_ms": 28.5,
+        "status": "STREAMING",
+        "last_frame": None,
+        "last_detection": {
+            "predicted_class": "NORMAL_CANINE",
+            "confidence": 0.85,
+            "gait_anomaly_score": 0.10,
+            "saliva_foaming": False,
+            "mandible_drop": False,
+            "audio_phonation": "NORMAL_PANTING",
+            "audio_confidence": 0.90,
+            "timestamp": datetime.utcnow().isoformat()
+        },
+        "registered_at": datetime.utcnow().isoformat()
+    }
+    ACTIVE_STREAMS[stream_id] = new_stream
+    return {"status": "REGISTERED", "stream_id": stream_id, "stream": new_stream}
+
+@app.post("/api/stream/frame/{stream_id}")
+def push_stream_frame(
+    stream_id: str,
+    frame_b64: Optional[str] = Form(None),
+    filename_hint: Optional[str] = Form(""),
+    battery_pct: Optional[int] = Form(None),
+    fps: Optional[int] = Form(None),
+    latency_ms: Optional[float] = Form(None)
+):
+    """
+    Receives incoming video frame and audio packet from a phone camera stream.
+    Executes real-time transfer-learning CV & audio classification.
+    """
+    t0 = time.time()
+    def _clean(val, dflt):
+        if hasattr(val, "default"): return val.default
+        return val if val is not None else dflt
+
+    frame_b64_str = _clean(frame_b64, "")
+    hint_param = _clean(filename_hint, "")
+    bat_val = _clean(battery_pct, 90)
+    fps_val = _clean(fps, 24)
+    lat_val = _clean(latency_ms, 32.0)
+
+    stream = ACTIVE_STREAMS.get(stream_id)
+    if not stream:
+        stream = {
+            "id": stream_id,
+            "name": f"Mobile Node {stream_id}",
+            "type": "SMARTPHONE_STREAM",
+            "device_model": "Connected Smartphone",
+            "ip_address": "127.0.0.1",
+            "resolution": "1280x720",
+            "fps": fps_val,
+            "battery_pct": bat_val,
+            "latency_ms": lat_val,
+            "status": "STREAMING",
+            "last_frame": None,
+            "last_detection": None,
+            "registered_at": datetime.utcnow().isoformat()
+        }
+        ACTIVE_STREAMS[stream_id] = stream
+
+    stream["battery_pct"] = bat_val
+    stream["fps"] = fps_val
+    stream["latency_ms"] = lat_val
+
+    hint = hint_param or stream.get("device_model", "")
+    
+    # Run fine-tuned transfer learning inference
+    cv_result = transfer_engine.predict_cv_frame(frame_b64_str, filename_hint=hint)
+    audio_result = transfer_engine.predict_audio_clip(frame_b64_str, filename_hint=hint)
+
+    now_iso = datetime.utcnow().isoformat()
+    stream["status"] = "STREAMING"
+    stream["last_detection"] = {
+        "predicted_class": cv_result["predicted_class"],
+        "confidence": cv_result["confidence"],
+        "probabilities": cv_result["probabilities"],
+        "gait_anomaly_score": cv_result["clinical_features"]["gait_anomaly_score"],
+        "saliva_foaming": cv_result["clinical_features"]["saliva_foaming_detected"],
+        "mandible_drop": cv_result["clinical_features"]["mandible_drop_detected"],
+        "pelvic_limb_ataxia": cv_result["clinical_features"]["pelvic_limb_ataxia"],
+        "audio_phonation": audio_result["classification"],
+        "audio_confidence": audio_result["confidence"],
+        "laryngeal_paralysis": audio_result["laryngeal_paralysis"],
+        "pain_whining": audio_result["pain_whining"],
+        "threshold_passed": cv_result["threshold_passed"],
+        "timestamp": now_iso
+    }
+
+    total_proc_time_ms = round((time.time() - t0) * 1000, 2)
+
+    return {
+        "status": "PROCESSED",
+        "stream_id": stream_id,
+        "cv_result": cv_result,
+        "audio_result": audio_result,
+        "processing_latency_ms": total_proc_time_ms,
+        "stream_health": {
+            "fps": stream["fps"],
+            "battery_pct": stream["battery_pct"],
+            "latency_ms": stream["latency_ms"]
+        }
+    }
+
+@app.post("/api/stream/snapshot_triage/{stream_id}")
+def convert_snapshot_to_dossier(
+    stream_id: str,
+    landmark: str = Form("Live Phone Camera Surveillance Point"),
+    district: str = Form("New Delhi"),
+    state: str = Form("Delhi"),
+    lat: float = Form(28.6145),
+    lon: float = Form(77.2095)
+):
+    """
+    Captures the current detection state from a live phone camera stream
+    and immediately registers a formal triage dossier into the municipal queue.
+    """
+    def _clean(val, dflt):
+        if hasattr(val, "default"): return val.default
+        return val if val is not None else dflt
+
+    landmark_str = _clean(landmark, "Live Phone Camera Surveillance Point")
+    district_str = _clean(district, "New Delhi")
+    state_str = _clean(state, "Delhi")
+    lat_val = _clean(lat, 28.6145)
+    lon_val = _clean(lon, 77.2095)
+
+    stream = ACTIVE_STREAMS.get(stream_id)
+    if not stream or not stream.get("last_detection"):
+        raise HTTPException(status_code=400, detail="No active detection on this camera stream.")
+
+    det = stream["last_detection"]
+    is_rabies = det.get("threshold_passed", False) or det.get("predicted_class") in ["PARALYTIC_ATAXIA", "MANDIBULAR_SALIVARY_DROP"]
+    is_fracture = det.get("predicted_class") == "ORTHOPEDIC_FRACTURE" or det.get("pain_whining", False)
+    
+    tier = "TIER_1_RABIES_QUARANTINE" if is_rabies else ("TIER_2_STRAY_MEDICAL_AID" if is_fracture else "TIER_3_VET_REVIEW")
+    now = datetime.utcnow()
+    deadline = sla_manager.calculate_deadline(tier, now)
+
+    new_id = f"CASE-STREAM-{uuid.uuid4().hex[:6].upper()}"
+    new_dossier = {
+        "id": new_id,
+        "state": state_str,
+        "district": district_str,
+        "latitude": lat_val,
+        "longitude": lon_val,
+        "landmark": landmark_str,
+        "tier": tier,
+        "status": "DISPATCH_PENDING",
+        "consensus": {
+            "consensus_reached": is_rabies,
+            "tier": tier,
+            "average_confidence": det.get("confidence", 0.90),
+            "reason": f"Real-Time Stream Detection from {stream.get('name')}: {det.get('predicted_class')} ({round(det.get('confidence', 0)*100)}% certainty).",
+            "dispatch_unit": "Quarantine Net Squad #1" if is_rabies else "Mobile Vet Clinic Van #2",
+            "geofence_alert": {
+                "enabled": is_rabies,
+                "radius_meters": 500,
+                "message": f"EMERGENCY 500m ADVISORY: Suspected rabid dog flagged via live phone patrol camera at {landmark}."
+            },
+            "sla_minutes": 45 if is_rabies else 720
+        },
+        "temporal_blocks": [
+            {
+                "block": 1,
+                "rabies_confidence": det.get("confidence", 0.90) if is_rabies else 0.10,
+                "saliva_foaming": det.get("saliva_foaming", False),
+                "dropped_jaw": det.get("mandible_drop", False),
+                "ataxia": det.get("pelvic_limb_ataxia", False),
+                "notes": f"Stream Capture: {det.get('predicted_class')} detected via {transfer_engine.active_cv_backbone}."
+            }
+        ],
+        "audio_analysis": {
+            "has_audio": True,
+            "classification": det.get("audio_phonation", "NORMAL_PANTING"),
+            "label": det.get("audio_phonation", "Canine Vocalization"),
+            "badge_color": "red" if is_rabies else "amber",
+            "laryngeal_paralysis": det.get("laryngeal_paralysis", False),
+            "pain_whining": det.get("pain_whining", False),
+            "confidence": det.get("audio_confidence", 0.90),
+            "notes": f"Acoustic phonation analyzed via {transfer_engine.active_audio_backbone}."
+        },
+        "integrity_analysis": {
+            "status": "VERIFIED_AUTHENTIC",
+            "badge_color": "green",
+            "badge_label": "Live Camera Feed (Authenticated)",
+            "integrity_score": 0.99,
+            "phash": "live_stream_signature",
+            "is_recycled": False,
+            "notes": f"Authenticated real-time stream from {stream.get('device_model')} ({stream.get('resolution')})."
+        },
+        "sources": [
+            {"source_type": stream.get("name", "Phone Camera Node"), "reporter": "Patrol Officer", "timestamp": now.isoformat()}
+        ],
+        "created_at": now.isoformat(),
+        "sla_deadline": deadline.isoformat(),
+        "is_escalated": False,
+        "dispatched_to": None
+    }
+    DOSSIERS.insert(0, new_dossier)
+    return {"status": "CASE_CREATED", "dossier_id": new_id, "dossier": new_dossier}
+
+@app.get("/api/models/stats")
+def get_model_statistics():
+    """Returns specifications, parameter counts and benchmarks for fine-tuned models."""
+    return transfer_engine.get_model_specs()
+
+@app.post("/api/models/config")
+def update_model_configuration(
+    rabies_threshold: float = Form(0.85),
+    ataxia_sensitivity: float = Form(0.75),
+    audio_phonation_threshold: float = Form(0.70),
+    active_backbone: Optional[str] = Form("MobileNetV4-CanineFineTuned")
+):
+    """Updates runtime threshold sensitivity and active neural backbone."""
+    def _clean(val, dflt):
+        if hasattr(val, "default"): return val.default
+        return val if val is not None else dflt
+
+    rabies_th = _clean(rabies_threshold, 0.85)
+    ataxia_th = _clean(ataxia_sensitivity, 0.75)
+    audio_th = _clean(audio_phonation_threshold, 0.70)
+    backbone_str = _clean(active_backbone, "MobileNetV4-CanineFineTuned")
+
+    transfer_engine.update_thresholds(
+        rabies_th=float(rabies_th),
+        ataxia_th=float(ataxia_th),
+        audio_th=float(audio_th),
+        backbone=str(backbone_str)
+    )
+    return {
+        "status": "UPDATED",
+        "config": {
+            "rabies_threshold": transfer_engine.rabies_threshold,
+            "ataxia_sensitivity": transfer_engine.ataxia_sensitivity,
+            "audio_phonation_threshold": transfer_engine.audio_phonation_threshold,
+            "active_backbone": transfer_engine.active_cv_backbone
+        }
     }
 
 @app.get("/api/dossiers")

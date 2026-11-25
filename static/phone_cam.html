@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>IndiePulse — Mobile Camera Edge Node</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background-color: #062A1F;
+      color: #FFFFFF;
+      touch-action: manipulation;
+    }
+    #camera-preview {
+      transform: scaleX(1);
+      object-fit: cover;
+    }
+    .vu-bar {
+      transition: width 0.08s ease;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-3 select-none font-sans">
+
+  <!-- Mobile Top Bar -->
+  <header class="flex items-center justify-between px-3 py-2 bg-black/40 backdrop-blur rounded-xl border border-white/10 z-20">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+        <i data-lucide="video" class="w-4 h-4"></i>
+      </div>
+      <div>
+        <h1 class="text-xs font-bold tracking-tight text-white flex items-center gap-1.5">
+          <span>IndiePulse Node</span>
+          <span id="node-id-badge" class="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/10 text-emerald-300">PHONE-CAM-01</span>
+        </h1>
+        <p class="text-[9px] text-slate-300" id="device-info-label">Detecting camera hardware...</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1 text-[10px] font-mono bg-black/50 px-2 py-1 rounded-lg border border-white/10">
+        <i data-lucide="battery-charging" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span id="battery-label">88%</span>
+      </div>
+      <a href="/" class="p-1.5 rounded-lg bg-white/10 text-slate-300 hover:text-white" title="Dashboard">
+        <i data-lucide="home" class="w-4 h-4"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Live Camera Viewport Area -->
+  <main class="relative flex-1 my-3 rounded-2xl overflow-hidden bg-black border border-white/15 flex items-center justify-center">
+    <video id="camera-preview" autoplay playsinline muted class="w-full h-full object-cover"></video>
+    <canvas id="capture-canvas" class="hidden"></canvas>
+
+    <!-- Overlay: Active HUD Bounding Box -->
+    <div id="detection-box" class="absolute inset-8 border-2 border-dashed border-emerald-400/60 rounded-xl pointer-events-none flex flex-col justify-between p-3 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <span id="hud-class-tag" class="text-[10px] font-mono font-bold bg-emerald-600/90 text-white px-2 py-0.5 rounded shadow">
+          SCANNING FOR CANINES...
+        </span>
+        <span id="hud-conf-tag" class="text-[10px] font-mono bg-black/70 text-white px-1.5 py-0.5 rounded">
+          FPS: <span id="fps-label">0</span>
+        </span>
+      </div>
+      
+      <!-- Audio VU level indicator on overlay -->
+      <div class="space-y-1">
+        <div class="flex items-center justify-between text-[9px] font-mono text-slate-300">
+          <span>Acoustic Mic Phonation:</span>
+          <span id="audio-state-tag" class="text-emerald-300 font-bold">PANTING / AMBIENT</span>
+        </div>
+        <div class="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/10">
+          <div id="vu-meter" class="vu-bar h-full bg-emerald-500 w-0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Pill -->
+    <div class="absolute top-3 left-3 bg-black/70 backdrop-blur text-white text-[10px] font-mono px-2.5 py-1 rounded-lg border border-white/10 flex items-center gap-1.5">
+      <span id="live-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+      <span id="stream-status-text">CAMERA STANDBY</span>
+    </div>
+
+    <div class="absolute top-3 right-3 bg-black/70 backdrop-blur text-white text-[10px] font-mono px-2.5 py-1 rounded-lg border border-white/10">
+      <span id="resolution-label">720p HD</span>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Controls -->
+  <footer class="space-y-2.5 bg-black/50 backdrop-blur p-3 rounded-2xl border border-white/10 z-20">
+    <!-- Camera Modifiers (Torch, Switch Lens, Quality) -->
+    <div class="flex items-center justify-between gap-2 text-xs">
+      <button onclick="toggleTorch()" id="torch-btn" class="flex-1 py-2 rounded-xl bg-white/10 text-white font-medium flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 transition">
+        <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span>Torch</span>
+      </button>
+
+      <button onclick="switchCameraLens()" class="flex-1 py-2 rounded-xl bg-white/10 text-white font-medium flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 transition">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span>Flip Lens</span>
+      </button>
+
+      <select id="quality-selector" onchange="changeResolution(this.value)" class="py-2 px-2.5 rounded-xl bg-black border border-white/20 text-white text-[11px] font-mono">
+        <option value="720">720p HD</option>
+        <option value="480">480p Std</option>
+        <option value="360">360p Fast</option>
+      </select>
+    </div>
+
+    <!-- Main Streaming Trigger Button -->
+    <button onclick="toggleLiveStreaming()" id="stream-trigger-btn" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-98 transition">
+      <i data-lucide="radio" class="w-4 h-4"></i>
+      <span id="stream-btn-text">START LIVE SURVEILLANCE FEED</span>
+    </button>
+  </footer>
+
+  <script>
+    let videoStream = null;
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let streamInterval = null;
+    let isStreaming = false;
+    let facingMode = "environment"; // default to back camera
+    let currentResolution = 720;
+    let torchActive = false;
+    let frameCounter = 0;
+    let lastFpsTime = Date.now();
+    let currentFps = 0;
+    let streamId = "PHONE-CAM-01";
+    let batteryLevel = 90;
+
+    // Read stream ID from URL params if present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("stream_id")) {
+      streamId = urlParams.get("stream_id");
+      document.getElementById("node-id-badge").textContent = streamId;
+    }
+
+    async function initCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(t => t.stop());
+      }
+
+      const resHeight = currentResolution;
+      const resWidth = Math.round((currentResolution * 16) / 9);
+
+      try {
+        const constraints = {
+          video: {
+            facingMode: facingMode,
+            width: { ideal: resWidth },
+            height: { ideal: resHeight }
+          },
+          audio: true
+        };
+
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const videoEl = document.getElementById("camera-preview");
+        videoEl.srcObject = videoStream;
+
+        // Display camera device label
+        const track = videoStream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        document.getElementById("device-info-label").textContent = track.label || `${settings.width}x${settings.height} (${facingMode})`;
+        document.getElementById("resolution-label").textContent = `${settings.height || resHeight}p`;
+
+        initAudioMeter(videoStream);
+      } catch (err) {
+        console.error("Camera access error:", err);
+        document.getElementById("device-info-label").textContent = "Camera error: Permission denied or unavailable";
+      }
+    }
+
+    function initAudioMeter(stream) {
+      try {
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length === 0) return;
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 64;
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const vuBar = document.getElementById("vu-meter");
+
+        function updateMeter() {
+          if (!analyser) return;
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+          }
+          const avg = sum / dataArray.length;
+          const pct = Math.min(100, Math.round((avg / 128) * 100));
+          vuBar.style.width = pct + "%";
+
+          if (pct > 60) {
+            vuBar.className = "vu-bar h-full bg-rose-500";
+            document.getElementById("audio-state-tag").textContent = "LOUD DISTRESS PHONATION";
+            document.getElementById("audio-state-tag").className = "text-rose-400 font-bold";
+          } else if (pct > 25) {
+            vuBar.className = "vu-bar h-full bg-amber-500";
+            document.getElementById("audio-state-tag").textContent = "ACTIVE VOCALIZATION";
+            document.getElementById("audio-state-tag").className = "text-amber-400 font-bold";
+          } else {
+            vuBar.className = "vu-bar h-full bg-emerald-500";
+            document.getElementById("audio-state-tag").textContent = "AMBIENT / PANTING";
+            document.getElementById("audio-state-tag").className = "text-emerald-300 font-bold";
+          }
+
+          requestAnimationFrame(updateMeter);
+        }
+        updateMeter();
+      } catch (e) {
+        console.warn("Audio meter init error:", e);
+      }
+    }
+
+    async function toggleTorch() {
+      if (!videoStream) return;
+      const track = videoStream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+
+      if (!capabilities.torch) {
+        alert("Torch/Flashlight not supported on this camera lens.");
+        return;
+      }
+
+      torchActive = !torchActive;
+      try {
+        await track.applyConstraints({
+          advanced: [{ torch: torchActive }]
+        });
+        document.getElementById("torch-btn").classList.toggle("bg-amber-500/30", torchActive);
+      } catch (e) {
+        console.error("Torch error:", e);
+      }
+    }
+
+    function switchCameraLens() {
+      facingMode = facingMode === "environment" ? "user" : "environment";
+      initCamera();
+    }
+
+    function changeResolution(val) {
+      currentResolution = parseInt(val);
+      initCamera();
+    }
+
+    function toggleLiveStreaming() {
+      const btn = document.getElementById("stream-trigger-btn");
+      const btnText = document.getElementById("stream-btn-text");
+      const statusText = document.getElementById("stream-status-text");
+      const dot = document.getElementById("live-dot");
+
+      if (!isStreaming) {
+        isStreaming = true;
+        btn.className = "w-full py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-98 transition";
+        btnText.textContent = "STOP SURVEILLANCE FEED";
+        statusText.textContent = "LIVE TO SOC COMMAND";
+        dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
+
+        // Stream frames every 150ms (~7 FPS, mobile optimized)
+        streamInterval = setInterval(sendFrameToBackend, 150);
+      } else {
+        isStreaming = false;
+        clearInterval(streamInterval);
+        btn.className = "w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-98 transition";
+        btnText.textContent = "START LIVE SURVEILLANCE FEED";
+        statusText.textContent = "CAMERA STANDBY";
+        dot.className = "w-2 h-2 rounded-full bg-slate-400";
+      }
+    }
+
+    async function sendFrameToBackend() {
+      const videoEl = document.getElementById("camera-preview");
+      const canvas = document.getElementById("capture-canvas");
+      if (!videoEl || !videoStream || videoEl.videoWidth === 0) return;
+
+      canvas.width = 320;
+      canvas.height = 180;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+      const frameB64 = canvas.toDataURL("image/jpeg", 0.6);
+
+      // FPS tracking
+      frameCounter++;
+      const now = Date.now();
+      if (now - lastFpsTime >= 1000) {
+        currentFps = frameCounter;
+        frameCounter = 0;
+        lastFpsTime = now;
+        document.getElementById("fps-label").textContent = currentFps;
+      }
+
+      // Send to backend
+      const formData = new FormData();
+      formData.append("frame_b64", frameB64);
+      formData.append("filename_hint", "mobile_phone_live_feed");
+      formData.append("fps", currentFps);
+      formData.append("battery_pct", batteryLevel);
+
+      try {
+        const tStart = performance.now();
+        const res = await fetch(`/api/stream/frame/${streamId}`, {
+          method: "POST",
+          body: formData
+        });
+        const latency = Math.round(performance.now() - tStart);
+
+        if (res.ok) {
+          const data = await res.json();
+          updateHudOverlay(data.cv_result, latency);
+        }
+      } catch (err) {
+        // Silent error
+      }
+    }
+
+    function updateHudOverlay(cv, latency) {
+      if (!cv) return;
+      const box = document.getElementById("detection-box");
+      const tag = document.getElementById("hud-class-tag");
+      const conf = Math.round(cv.confidence * 100);
+
+      tag.textContent = `${cv.predicted_class} • ${conf}%`;
+
+      if (cv.predicted_class === "PARALYTIC_ATAXIA" || cv.predicted_class === "MANDIBULAR_SALIVARY_DROP") {
+        box.className = "absolute inset-8 border-2 border-dashed border-rose-500 rounded-xl pointer-events-none flex flex-col justify-between p-3 animate-pulse bg-rose-500/10";
+        tag.className = "text-[10px] font-mono font-bold bg-rose-600 text-white px-2 py-0.5 rounded shadow";
+      } else if (cv.predicted_class === "ORTHOPEDIC_FRACTURE") {
+        box.className = "absolute inset-8 border-2 border-dashed border-amber-400 rounded-xl pointer-events-none flex flex-col justify-between p-3 bg-amber-500/10";
+        tag.className = "text-[10px] font-mono font-bold bg-amber-600 text-white px-2 py-0.5 rounded shadow";
+      } else {
+        box.className = "absolute inset-8 border-2 border-dashed border-emerald-400/60 rounded-xl pointer-events-none flex flex-col justify-between p-3";
+        tag.className = "text-[10px] font-mono font-bold bg-emerald-600/90 text-white px-2 py-0.5 rounded shadow";
+      }
+    }
+
+    // Battery API
+    if (navigator.getBattery) {
+      navigator.getBattery().then(battery => {
+        batteryLevel = Math.round(battery.level * 100);
+        document.getElementById("battery-label").textContent = batteryLevel + "%";
+        battery.addEventListener("levelchange", () => {
+          batteryLevel = Math.round(battery.level * 100);
+          document.getElementById("battery-label").textContent = batteryLevel + "%";
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initCamera();
+      if (window.lucide) window.lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

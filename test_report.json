@@ -1,19 +1,19 @@
 {
-  "timestamp": "2026-11-21T22:26:32.393419Z",
+  "timestamp": "2026-11-25T06:21:40.727418Z",
   "suite": "IndiePulse Core Multi-Modal & Municipal Engine Test Suite",
   "summary": {
     "total_tests": 10,
     "passed": 10,
     "failed": 0,
     "pass_rate_pct": 100.0,
-    "average_latency_ms": 76.76
+    "average_latency_ms": 69.37
   },
   "test_results": [
     {
       "test_id": "TEST-01-REVERSE-GEOCODE",
       "name": "Live GPS Reverse Geocoding (Google Maps / Nominatim Fallback)",
       "passed": true,
-      "latency_ms": 19.83,
+      "latency_ms": 18.56,
       "details": "Resolved: 'GPS Pin (28.6145, 77.2095)' via provider 'local_coordinates'",
       "data": {
         "success": true,
@@ -30,7 +30,7 @@
       "test_id": "TEST-02-RABIES-TRIAGE",
       "name": "Confirmed Rabies Multimodal Triage (Vision + Acoustic Howl)",
       "passed": true,
-      "latency_ms": 307.74,
+      "latency_ms": 283.1,
       "details": "Tier: TIER_1_RABIES_QUARANTINE | Confidence: 0.984 | Howl: HOARSE_RABIES_HOWL",
       "data": {
         "consensus": {
@@ -71,25 +71,27 @@
           "notes": "Acoustic Spectrum: Low-frequency harmonic disruption with prominent subharmonic rasping; pathognomonic for laryngeal vocal cord paresis."
         },
         "integrity": {
-          "status": "VERIFIED_AUTHENTIC",
-          "badge_color": "green",
-          "badge_label": "Verified Authentic Device Capture",
-          "integrity_score": 1.0,
+          "status": "AMBIGUOUS_VET_REVIEW",
+          "badge_color": "amber",
+          "badge_label": "Integrity Warning (Vet Review Required)",
+          "integrity_score": 0.8,
           "phash": "0000000000000000",
           "is_recycled": false,
           "recycled_source": null,
           "freshness": {
-            "fresh": true,
-            "source_age_hours": 1.44,
-            "status": "FRESH_LIVE_CAPTURE"
+            "fresh": false,
+            "source_age_hours": 81.36,
+            "status": "ARCHIVED_OR_STALE_MEDIA"
           },
           "geo_verification": {
             "consistent": true,
             "status": "VERIFIED_WITHIN_BOUNDS",
             "notes": "Coordinates (28.6142, 77.2092) verified inside Delhi geographic perimeter."
           },
-          "flags": [],
-          "notes": "Verified authentic live mobile video capture."
+          "flags": [
+            "Media modified 81.36h ago"
+          ],
+          "notes": "Integrity notice: Media modified 81.36h ago."
         }
       }
     },
@@ -97,7 +99,7 @@
       "test_id": "TEST-03-PANTING-SHIELD",
       "name": "Summer Panting Cross-Modal Overrule (Anti-Hallucination Shield)",
       "passed": true,
-      "latency_ms": 220.36,
+      "latency_ms": 189.45,
       "details": "Shield Activated: True | Overruled to: TIER_2_STRAY_MEDICAL_AID",
       "data": {
         "consensus": {
@@ -144,7 +146,7 @@
       "test_id": "TEST-04-FRACTURE-PAIN",
       "name": "Orthopedic Trauma & Pain Whine Detection",
       "passed": true,
-      "latency_ms": 219.58,
+      "latency_ms": 202.53,
       "details": "Classification: ACUTE_PAIN_WHINE | Unit: GOVERNMENT_MOBILE_VET_DISPENSARY",
       "data": {
         "consensus": {
@@ -219,7 +221,7 @@
       "test_id": "TEST-09-SLA-ESCALATION",
       "name": "Municipal SLA Breach Simulation & Auto-Escalation to District Magistrate",
       "passed": true,
-      "latency_ms": 0.02,
+      "latency_ms": 0.01,
       "details": "Status: ESCALATED_TO_DISTRICT_MAGISTRATE | Escalated: True"
     },
     {
