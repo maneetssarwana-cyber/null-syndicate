@@ -860,8 +860,11 @@ function renderStreamsList() {
     return;
   }
 
-  // Auto-select first active phone if none selected or old mock selected
-  if (!selectedStreamId || !activeStreamsData[selectedStreamId] || selectedStreamId.startsWith("PHONE-CAM-0")) {
+  // Auto-select the active phone that is actually transmitting frames!
+  const livePhone = phoneStreams.find(s => s.last_frame && s.last_frame.startsWith("data:image"));
+  if (livePhone) {
+    selectedStreamId = livePhone.id;
+  } else if (!selectedStreamId || !activeStreamsData[selectedStreamId] || selectedStreamId.startsWith("PHONE-CAM-0")) {
     selectedStreamId = phoneStreams[0].id;
   }
 

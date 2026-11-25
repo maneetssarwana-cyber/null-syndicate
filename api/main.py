@@ -404,8 +404,17 @@ def reverse_geocode(lat: float, lon: float):
 
 @app.get("/api/stream/active")
 def get_active_streams():
-    """Returns all active video streaming feeds (smartphones & CCTV)."""
-    return list(ACTIVE_STREAMS.values())
+    """Returns all active video streaming feeds, auto-pruning empty registration ghost nodes."""
+    # If any stream has live frames, prune ghost nodes that don't have frames
+    has_live = any(s.get("last_frame") for s in ACTIVE_STREAMS.values())
+    if has_live:
+        for sid, s in list(ACTIVE_STREAMS.items()):
+            if not s.get("last_frame"):
+                del ACTIVE_STREAMS[sid]
+
+    streams = list(ACTIVE_STREAMS.values())
+    streams.sort(key=lambda s: (1 if s.get("last_frame") else 0, s.get("fps", 0)), reverse=True)
+    return streams
 
 @app.post("/api/stream/register")
 def register_phone_stream(
