@@ -1085,11 +1085,22 @@ function openPhoneQrModal() {
   const modal = document.getElementById("phone-qr-modal");
   if (!modal) return;
   modal.classList.remove("hidden");
-  const host = window.location.host || "localhost:8000";
+  
+  let hostName = window.location.hostname || "10.30.151.126";
+  if (hostName === "localhost" || hostName === "127.0.0.1") {
+    hostName = "10.30.151.126";
+  }
+  const port = window.location.port ? `:${window.location.port}` : ":8000";
   const protocol = window.location.protocol || "http:";
+  const fullUrl = `${protocol}//${hostName}${port}/phone_cam.html`;
+
   const urlSpan = document.getElementById("phone-stream-url");
   if (urlSpan) {
-    urlSpan.innerText = `${protocol}//${host}/phone_cam.html`;
+    urlSpan.innerText = fullUrl;
+  }
+  const qrImg = document.getElementById("phone-qr-img");
+  if (qrImg) {
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(fullUrl)}`;
   }
   initLucide();
 }

@@ -52,8 +52,37 @@
 
   <!-- Live Camera Viewport Area -->
   <main class="relative flex-1 my-3 rounded-2xl overflow-hidden bg-black border border-white/15 flex items-center justify-center">
-    <video id="camera-preview" autoplay playsinline muted class="w-full h-full object-cover"></video>
+    <video id="camera-preview" autoplay playsinline webkit-playsinline muted class="w-full h-full object-cover"></video>
     <canvas id="capture-canvas" class="hidden"></canvas>
+
+    <!-- Tap to Start / Permission Banner -->
+    <div id="camera-error-banner" class="hidden absolute inset-0 bg-slate-950/90 z-30 p-6 flex flex-col items-center justify-center text-center space-y-4">
+      <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/40">
+        <i data-lucide="video-off" class="w-7 h-7"></i>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-sm font-bold text-white" id="error-title">Camera Access Required</h3>
+        <p class="text-xs text-slate-300 max-w-xs leading-relaxed" id="error-desc">
+          Tap the button below to grant camera permissions for live canine triage.
+        </p>
+      </div>
+      <button onclick="requestCameraExplicitly()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition">
+        <i data-lucide="camera" class="w-4 h-4"></i>
+        <span>Enable Camera Access</span>
+      </button>
+      <div class="text-[10px] text-slate-400 max-w-xs bg-white/5 p-2.5 rounded-lg border border-white/10 font-mono text-left">
+        <b>Chrome Flag check:</b> Did you include <code>http://</code> in the flag?<br/>
+        e.g. <code>http://10.30.151.126:8000</code> and tap <b>Relaunch</b>.
+      </div>
+    </div>
+
+    <!-- Tap to Play overlay if video paused -->
+    <div id="tap-to-play-overlay" onclick="resumeVideoPlay()" class="hidden absolute inset-0 z-25 bg-black/60 flex flex-col items-center justify-center text-center cursor-pointer">
+      <div class="w-16 h-16 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xl animate-bounce">
+        <i data-lucide="play" class="w-8 h-8 ml-1"></i>
+      </div>
+      <span class="text-xs font-bold text-white mt-3">Tap anywhere to start preview</span>
+    </div>
 
     <!-- Overlay: Active HUD Bounding Box -->
     <div id="detection-box" class="absolute inset-8 border-2 border-dashed border-emerald-400/60 rounded-xl pointer-events-none flex flex-col justify-between p-3 transition-all duration-300">
@@ -141,38 +170,89 @@
     }
 
     async function initCamera() {
+      const errBanner = document.getElementById("camera-error-banner");
+      if (errBanner) errBanner.classList.add("hidden");
+
       if (videoStream) {
         videoStream.getTracks().forEach(t => t.stop());
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showCameraError("getUserMedia API is not available on this browser/origin. Ensure the chrome://flags origin includes 'http://' and you tapped Relaunch.");
+        return;
       }
 
       const resHeight = currentResolution;
       const resWidth = Math.round((currentResolution * 16) / 9);
 
+      // Attempt 1: Full Video + Audio
       try {
-        const constraints = {
-          video: {
-            facingMode: facingMode,
-            width: { ideal: resWidth },
-            height: { ideal: resHeight }
-          },
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode }, width: { ideal: resWidth }, height: { ideal: resHeight } },
           audio: true
-        };
-
-        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        const videoEl = document.getElementById("camera-preview");
-        videoEl.srcObject = videoStream;
-
-        // Display camera device label
-        const track = videoStream.getVideoTracks()[0];
-        const settings = track.getSettings();
-        document.getElementById("device-info-label").textContent = track.label || `${settings.width}x${settings.height} (${facingMode})`;
-        document.getElementById("resolution-label").textContent = `${settings.height || resHeight}p`;
-
-        initAudioMeter(videoStream);
-      } catch (err) {
-        console.error("Camera access error:", err);
-        document.getElementById("device-info-label").textContent = "Camera error: Permission denied or unavailable";
+        });
+      } catch (err1) {
+        console.warn("Attempt 1 (video+audio) failed:", err1);
+        // Attempt 2: Video Only (mic busy or mic permission denied)
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: facingMode } },
+            audio: false
+          });
+        } catch (err2) {
+          console.warn("Attempt 2 (video with facingMode) failed:", err2);
+          // Attempt 3: Any video device
+          try {
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          } catch (err3) {
+            console.error("All getUserMedia attempts failed:", err3);
+            showCameraError(`${err3.name}: ${err3.message || "Permission dismissed or camera in use by another app"}`);
+            return;
+          }
+        }
       }
+
+      const videoEl = document.getElementById("camera-preview");
+      videoEl.srcObject = videoStream;
+      
+      try {
+        await videoEl.play();
+      } catch (playErr) {
+        console.warn("video.play() blocked by autoplay policy:", playErr);
+        document.getElementById("tap-to-play-overlay")?.classList.remove("hidden");
+      }
+
+      const track = videoStream.getVideoTracks()[0];
+      const settings = track.getSettings ? track.getSettings() : {};
+      document.getElementById("device-info-label").textContent = track.label || `${settings.width || 1280}x${settings.height || 720} (${facingMode})`;
+      document.getElementById("resolution-label").textContent = `${settings.height || resHeight}p HD`;
+
+      if (videoStream.getAudioTracks().length > 0) {
+        initAudioMeter(videoStream);
+      } else {
+        document.getElementById("audio-state-tag").textContent = "MIC MUTED / UNAVAILABLE";
+      }
+    }
+
+    function showCameraError(msg) {
+      const banner = document.getElementById("camera-error-banner");
+      const desc = document.getElementById("error-desc");
+      if (banner && desc) {
+        desc.textContent = msg;
+        banner.classList.remove("hidden");
+      }
+      document.getElementById("device-info-label").textContent = "Camera Error: Check prompt or flags";
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function requestCameraExplicitly() {
+      initCamera();
+    }
+
+    function resumeVideoPlay() {
+      const videoEl = document.getElementById("camera-preview");
+      if (videoEl) videoEl.play();
+      document.getElementById("tap-to-play-overlay")?.classList.add("hidden");
     }
 
     function initAudioMeter(stream) {
