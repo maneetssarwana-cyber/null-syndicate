@@ -159,14 +159,62 @@
     let frameCounter = 0;
     let lastFpsTime = Date.now();
     let currentFps = 0;
-    let streamId = "PHONE-CAM-01";
+    function detectRealDeviceName() {
+      const ua = navigator.userAgent;
+      if (/Android/i.test(ua)) {
+        const match = ua.match(/;\s*([^;]+?)\s*Build\//i);
+        if (match && match[1]) {
+          return match[1].replace(/_/g, " ").trim();
+        }
+        const modelMatch = ua.match(/\bAndroid[^;]*;\s*([^;)]+)\b/i);
+        if (modelMatch && modelMatch[1]) {
+          return modelMatch[1].replace(/_/g, " ").trim();
+        }
+        return "Android Phone";
+      }
+      if (/iPhone/i.test(ua)) return "Apple iPhone";
+      if (/iPad/i.test(ua)) return "Apple iPad";
+      return "Mobile Device";
+    }
+
+    const myDeviceModel = detectRealDeviceName();
+    let streamId = sessionStorage.getItem("indiepulse_stream_id") || "";
     let batteryLevel = 90;
 
     // Read stream ID from URL params if present
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("stream_id")) {
       streamId = urlParams.get("stream_id");
+      sessionStorage.setItem("indiepulse_stream_id", streamId);
+    }
+    if (streamId) {
       document.getElementById("node-id-badge").textContent = streamId;
+    }
+
+    async function registerDeviceOnServer() {
+      const formData = new FormData();
+      formData.append("device_model", myDeviceModel);
+      formData.append("resolution", `${currentResolution}p`);
+      formData.append("fps", 24);
+      formData.append("battery_pct", batteryLevel);
+
+      try {
+        const res = await fetch("/api/stream/register", {
+          method: "POST",
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.stream_id) {
+            streamId = data.stream_id;
+            sessionStorage.setItem("indiepulse_stream_id", streamId);
+            document.getElementById("node-id-badge").textContent = streamId;
+            document.getElementById("device-info-label").textContent = `${myDeviceModel} (Connected)`;
+          }
+        }
+      } catch (err) {
+        console.warn("Server registration notice:", err);
+      }
     }
 
     async function initCamera() {
@@ -380,10 +428,14 @@
         document.getElementById("fps-label").textContent = currentFps;
       }
 
+      if (!streamId) {
+        await registerDeviceOnServer();
+      }
+
       // Send to backend
       const formData = new FormData();
       formData.append("frame_b64", frameB64);
-      formData.append("filename_hint", "mobile_phone_live_feed");
+      formData.append("filename_hint", myDeviceModel);
       formData.append("fps", currentFps);
       formData.append("battery_pct", batteryLevel);
 
@@ -438,6 +490,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       initCamera();
+      registerDeviceOnServer();
       if (window.lucide) window.lucide.createIcons();
     });
   </script>

@@ -69,56 +69,8 @@ sla_manager = SLAManager(
 transfer_engine = CanineTransferLearningEngine()
 
 # Active Ingestion Feeds: Connected Smartphone Cameras & CCTV Streams
-ACTIVE_STREAMS = {
-    "PHONE-CAM-01": {
-        "id": "PHONE-CAM-01",
-        "name": "Field Phone Node #1 (Pixel 8)",
-        "type": "SMARTPHONE_STREAM",
-        "device_model": "Google Pixel 8 (Back Lens)",
-        "ip_address": "192.168.1.104",
-        "resolution": "1280x720",
-        "fps": 24,
-        "battery_pct": 86,
-        "latency_ms": 48.2,
-        "status": "STREAMING", # STREAMING | STANDBY | OFFLINE
-        "last_frame": None,
-        "last_detection": {
-            "predicted_class": "PARALYTIC_ATAXIA",
-            "confidence": 0.942,
-            "gait_anomaly_score": 0.94,
-            "saliva_foaming": True,
-            "mandible_drop": True,
-            "audio_phonation": "CANINE_RABIES_HOWL",
-            "audio_confidence": 0.948,
-            "timestamp": datetime.utcnow().isoformat()
-        },
-        "registered_at": datetime.utcnow().isoformat()
-    },
-    "PHONE-CAM-02": {
-        "id": "PHONE-CAM-02",
-        "name": "Patrol Officer Phone #2 (iPhone 15)",
-        "type": "SMARTPHONE_STREAM",
-        "device_model": "Apple iPhone 15 Pro (Back Lens)",
-        "ip_address": "192.168.1.112",
-        "resolution": "1280x720",
-        "fps": 24,
-        "battery_pct": 64,
-        "latency_ms": 36.8,
-        "status": "STANDBY",
-        "last_frame": None,
-        "last_detection": {
-            "predicted_class": "NORMAL_CANINE",
-            "confidence": 0.88,
-            "gait_anomaly_score": 0.08,
-            "saliva_foaming": False,
-            "mandible_drop": False,
-            "audio_phonation": "NORMAL_PANTING",
-            "audio_confidence": 0.92,
-            "timestamp": datetime.utcnow().isoformat()
-        },
-        "registered_at": datetime.utcnow().isoformat()
-    }
-}
+# Dynamically registered as real mobile devices connect via /phone_cam.html
+ACTIVE_STREAMS: Dict[str, Any] = {}
 
 DOSSIERS: List[Dict[str, Any]] = []
 

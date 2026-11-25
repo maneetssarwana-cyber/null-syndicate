@@ -838,16 +838,31 @@ function renderStreamsList() {
   const phoneStreams = Object.values(activeStreamsData).filter(s => s.type === "SMARTPHONE_STREAM");
   if (countBadge) {
     countBadge.innerText = `${phoneStreams.length} Active`;
+    countBadge.className = phoneStreams.length > 0 
+      ? "text-[10px] bg-emerald-50 text-emerald-700 font-mono font-semibold px-2 py-0.5 rounded-full border border-emerald-200"
+      : "text-[10px] bg-slate-100 text-slate-600 font-mono font-semibold px-2 py-0.5 rounded-full border border-slate-200";
   }
 
   if (phoneStreams.length === 0) {
     container.innerHTML = `
-      <div class="p-3 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-xs text-slate-500">
-        No mobile cameras paired yet.
-        <button onclick="openPhoneQrModal()" class="mt-2 text-emerald-700 font-bold block mx-auto underline">+ Pair Smartphone</button>
+      <div class="p-4 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-xs text-slate-500">
+        <div class="flex items-center justify-center gap-1.5 text-slate-600 mb-1">
+          <i data-lucide="smartphone" class="w-4 h-4 text-emerald-700"></i>
+          <span class="font-bold">Awaiting Phone Connection</span>
+        </div>
+        <p class="text-[11px] text-slate-500">Scan QR or open streamer on your phone to link live camera.</p>
+        <button onclick="openPhoneQrModal()" class="mt-2.5 wm-btn-primary px-3 py-1 text-xs mx-auto inline-flex items-center gap-1">
+          <span>+ Pair Phone as CCTV</span>
+        </button>
       </div>
     `;
+    initLucide();
     return;
+  }
+
+  // Auto-select first active phone if none selected or old mock selected
+  if (!selectedStreamId || !activeStreamsData[selectedStreamId] || selectedStreamId.startsWith("PHONE-CAM-0")) {
+    selectedStreamId = phoneStreams[0].id;
   }
 
   container.innerHTML = phoneStreams.map(s => {
@@ -864,7 +879,10 @@ function renderStreamsList() {
             ${isAlert ? 'Ataxia Alert' : s.status}
           </span>
         </div>
-        <p class="text-xs text-slate-600 mt-1">${s.name}</p>
+        <p class="text-xs text-slate-700 mt-1 font-semibold flex items-center gap-1.5 truncate">
+          <i data-lucide="smartphone" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+          <span class="truncate">${s.name}</span>
+        </p>
         <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-mono">
           <span>🔋 ${s.battery_pct}%</span>
           <span>📶 ${Math.round(s.latency_ms)}ms</span>
