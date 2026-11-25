@@ -793,7 +793,7 @@ let streamPollingTimer = null;
 
 function startStreamPolling() {
   if (streamPollingTimer) clearInterval(streamPollingTimer);
-  streamPollingTimer = setInterval(fetchActiveStreams, 2500);
+  streamPollingTimer = setInterval(fetchActiveStreams, 400);
 }
 
 function stopStreamPolling() {
@@ -950,6 +950,21 @@ function renderStreamPlayer() {
   const isRabiesAlert = det.predicted_class === "PARALYTIC_ATAXIA" || det.saliva_foaming || det.mandible_drop;
   const confidencePct = det.confidence ? Math.round(det.confidence * 100) : 94;
 
+  const existingImg = document.getElementById("phone-stream-img");
+  const existingId = panel.getAttribute("data-stream-id");
+
+  if (existingImg && existingId === selectedStreamId) {
+    if (phoneData && phoneData.last_frame) {
+      existingImg.src = phoneData.last_frame;
+    }
+    const batEl = document.getElementById("hud-bat-label");
+    if (batEl && phoneData) batEl.textContent = `🔋 ${phoneData.battery_pct}%`;
+    const latEl = document.getElementById("hud-lat-label");
+    if (latEl && phoneData) latEl.textContent = `📶 ${Math.round(phoneData.latency_ms)}ms`;
+    return;
+  }
+  panel.setAttribute("data-stream-id", selectedStreamId);
+
   panel.innerHTML = `
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
       <div>
@@ -971,7 +986,7 @@ function renderStreamPlayer() {
       ${phoneData && phoneData.last_frame ? `
         <img id="phone-stream-img" src="${phoneData.last_frame}" alt="Live Phone Stream" class="w-full h-full object-cover">
       ` : `
-        <video src="/videos/rabid_dog_sample.mp4" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+        <img id="phone-stream-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'><rect width='640' height='360' fill='%230f172a'/><text x='50%25' y='50%25' fill='%2364748b' font-family='sans-serif' font-size='14' text-anchor='middle'>Awaiting incoming camera frames from phone...</text></svg>" alt="Live Phone Stream" class="w-full h-full object-cover">
       `}
       
       <!-- Live HUD Overlays -->
@@ -981,8 +996,8 @@ function renderStreamPlayer() {
       </div>
 
       <div class="absolute top-3 right-3 bg-slate-900/90 text-white text-[10px] font-mono px-2.5 py-1 rounded-lg z-10 flex items-center gap-3 border border-slate-700">
-        <span>🔋 ${phoneData ? phoneData.battery_pct : 86}%</span>
-        <span>📶 ${phoneData ? Math.round(phoneData.latency_ms) : 48}ms</span>
+        <span id="hud-bat-label">🔋 ${phoneData ? phoneData.battery_pct : 86}%</span>
+        <span id="hud-lat-label">📶 ${phoneData ? Math.round(phoneData.latency_ms) : 48}ms</span>
         <span>${phoneData ? phoneData.resolution : '1280x720'}</span>
       </div>
 

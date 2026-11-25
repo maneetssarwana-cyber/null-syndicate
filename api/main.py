@@ -542,6 +542,8 @@ def push_stream_frame(
     stream["battery_pct"] = bat_val
     stream["fps"] = fps_val
     stream["latency_ms"] = lat_val
+    if frame_b64_str and frame_b64_str.strip():
+        stream["last_frame"] = frame_b64_str
 
     hint = hint_param or stream.get("device_model", "")
     
